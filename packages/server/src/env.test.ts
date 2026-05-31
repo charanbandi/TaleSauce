@@ -11,4 +11,9 @@ describe("loadEnv", () => {
   it("throws when required key missing", () => {
     expect(() => loadEnv({ OPENCLAW_API_URL: "u" })).toThrow(/OPENCLAW_API_KEY/);
   });
+  it("throws on invalid SERVER_PORT", () => {
+    expect(() =>
+      loadEnv({ OPENCLAW_API_URL: "u", OPENCLAW_API_KEY: "k", SERVER_PORT: "banana" }),
+    ).toThrow(/SERVER_PORT/);
+  });
 });
