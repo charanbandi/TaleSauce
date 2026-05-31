@@ -1,5 +1,15 @@
 # brainstorming companion
 .superpowers/
+.claude
+.vscode/
 
 # local planning/design docs — not tracked in git
 docs/
+
+node_modules/
+dist/
+*.tsbuildinfo
+.env
+*.sqlite
+*.sqlite-journal
+.DS_Store
