@@ -6,6 +6,7 @@ export interface ParserHandlers {
 
 const QUESTION = "❓QUESTION:";
 const DONE = "✅DONE:";
+const maxMarkerLen = Math.max(QUESTION.length, DONE.length);
 
 /**
  * Parses an OpenAI-compatible SSE stream and accumulates assistant text,
@@ -16,6 +17,7 @@ const DONE = "✅DONE:";
 export class OpenClawStreamParser {
   private lineBuf = "";   // SSE line assembly
   private text = "";      // accumulated assistant content
+  private emitted = 0;    // how many chars of this.text have been emitted as tokens
   private resolved = false;
 
   constructor(private h: ParserHandlers) {}
@@ -39,6 +41,17 @@ export class OpenClawStreamParser {
     }
   }
 
+  /** Returns the length of the longest suffix of this.text that is a prefix of either marker. */
+  private holdbackLen(): number {
+    const t = this.text;
+    const max = Math.min(maxMarkerLen, t.length);
+    for (let L = max; L >= 1; L--) {
+      const suf = t.slice(t.length - L);
+      if (QUESTION.startsWith(suf) || DONE.startsWith(suf)) return L;
+    }
+    return 0;
+  }
+
   private consume(delta: string): void {
     if (this.resolved) return;
     this.text += delta;
@@ -55,7 +68,13 @@ export class OpenClawStreamParser {
       this.h.onResult(this.text.slice(di + DONE.length).trim());
       return;
     }
-    this.h.onToken(delta);
+    // Emit only the portion of text that cannot be the start of a marker.
+    const safeEnd = this.text.length - this.holdbackLen();
+    if (safeEnd > this.emitted) {
+      const out = this.text.slice(this.emitted, safeEnd);
+      this.emitted = safeEnd;
+      if (out) this.h.onToken(out);
+    }
   }
 
   end(): void {
