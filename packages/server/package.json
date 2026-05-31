@@ -1,0 +1,23 @@
+{
+  "name": "@talesauce/server",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@fastify/websocket": "^11.0.0",
+    "@talesauce/shared": "*",
+    "better-sqlite3": "^12.0.0",
+    "dotenv": "^16.4.0",
+    "fastify": "^5.0.0",
+    "nanoid": "^5.0.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.0",
+    "@types/node": "^20.0.0",
+    "tsx": "^4.16.0"
+  }
+}
