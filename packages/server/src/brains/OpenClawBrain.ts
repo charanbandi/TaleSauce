@@ -45,14 +45,14 @@ export class OpenClawBrain implements AgentBrain {
       return;
     }
     if (!res.ok || !res.body) {
-      this.emit({ type: "error", message: `OpenClaw error (${(res as any).status ?? "no body"}).` });
+      const detail = !res.ok ? `HTTP ${res.status}` : "no body";
+      this.emit({ type: "error", message: `OpenClaw error (${detail}).` });
       this.emit({ type: "state", state: "error" });
       return;
     }
 
-    let assistantText = "";
     const parser = new OpenClawStreamParser({
-      onToken: (t) => { assistantText += t; this.emit({ type: "token", text: t }); },
+      onToken: (t) => { this.emit({ type: "token", text: t }); },
       onQuestion: (t) => {
         this.convo.push({ role: "assistant", content: `❓QUESTION: ${t}` });
         this.emit({ type: "state", state: "needs-input" });
@@ -77,7 +77,9 @@ export class OpenClawBrain implements AgentBrain {
     } catch {
       // network cut mid-stream: fall through to end() so we still resolve
     } finally {
-      parser.end();
+      if (!this.controller?.signal.aborted) {
+        parser.end();
+      }
     }
   }
 }

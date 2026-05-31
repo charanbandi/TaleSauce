@@ -52,4 +52,30 @@ describe("OpenClawBrain", () => {
     brain.start("x");
     await vi.waitFor(() => expect(events.some((e) => e.type === "error")).toBe(true));
   });
+
+  it("does not emit result/done when stopped mid-stream", async () => {
+    const events: BrainEvent[] = [];
+    let rejectPull: ((e: unknown) => void) | null = null;
+    const sseChunk = `data: ${JSON.stringify({ choices: [{ delta: { content: "Working " } }] })}\n\n`;
+    const fetchImpl = (async (_url: string, _init: any) => ({
+      ok: true,
+      body: new ReadableStream<Uint8Array>({
+        start(controller) { controller.enqueue(new TextEncoder().encode(sseChunk)); },
+        // second read hangs until we reject it (simulating the aborted fetch read rejecting)
+        pull() { return new Promise<void>((_res, rej) => { rejectPull = rej; }); },
+      }),
+    })) as unknown as typeof fetch;
+
+    const brain = new OpenClawBrain({ ...cfg }, fetchImpl);
+    brain.on((e) => events.push(e));
+    brain.start("do it");
+    // let the first chunk be read and the second read begin pending
+    await vi.waitFor(() => expect(events.some((e) => e.type === "token")).toBe(true));
+    brain.stop();                       // sets controller.signal.aborted = true
+    rejectPull?.(new DOMException("Aborted", "AbortError")); // reject the pending read
+    // give microtasks a chance to flush
+    await new Promise((r) => setTimeout(r, 10));
+    expect(events.some((e) => e.type === "result")).toBe(false);
+    expect(events.some((e) => e.type === "state" && (e as any).state === "done")).toBe(false);
+  });
 });
