@@ -11,6 +11,15 @@ export type AgentVisualState =
   | "reporting"
   | "error";
 
+export interface AgentPersonality {
+  skill: string;
+  personality: string;
+  speakingStyle: string;
+  appearance: string;
+  idleActions: string[];
+  workAnimation: string;
+}
+
 export interface AgentConfig {
   id: string;
   name: string;
@@ -20,14 +29,7 @@ export interface AgentConfig {
   model?: string;
   /** Claude Code session id (Phase 2; unused in Phase 1). */
   sessionId?: string;
-  personality: {
-    skill: string;
-    personality: string;
-    speakingStyle: string;
-    appearance: string;
-    idleActions: string[];
-    workAnimation: string;
-  };
+  personality: AgentPersonality;
   pos: { x: number; y: number };
 }
 
