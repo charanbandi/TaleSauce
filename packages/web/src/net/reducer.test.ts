@@ -53,4 +53,21 @@ describe("applyEvent", () => {
     expect(last.kind).toBe("result");
     expect(last.content).toContain("OpenClaw is unreachable.");
   });
+  it("permission adds a card for the agent", () => {
+    let s = applyEvent(initialState(), { type: "hello", agents: [rt("a1")] });
+    s = applyEvent(s, { type: "permission", agentId: "a1", requestId: "r1", tool: "Bash", summary: "Run: npm test" });
+    expect(s.permissions.a1).toEqual([{ requestId: "r1", tool: "Bash", summary: "Run: npm test" }]);
+  });
+  it("permission dedupes on requestId (reconnect replay)", () => {
+    let s = applyEvent(initialState(), { type: "hello", agents: [rt("a1")] });
+    s = applyEvent(s, { type: "permission", agentId: "a1", requestId: "r1", tool: "Bash", summary: "x" });
+    s = applyEvent(s, { type: "permission", agentId: "a1", requestId: "r1", tool: "Bash", summary: "x" });
+    expect(s.permissions.a1).toHaveLength(1);
+  });
+  it("permission-resolved removes the card", () => {
+    let s = applyEvent(initialState(), { type: "hello", agents: [rt("a1")] });
+    s = applyEvent(s, { type: "permission", agentId: "a1", requestId: "r1", tool: "Bash", summary: "x" });
+    s = applyEvent(s, { type: "permission-resolved", agentId: "a1", requestId: "r1" });
+    expect(s.permissions.a1).toEqual([]);
+  });
 });

@@ -2,14 +2,17 @@ import type { AgentRuntime, ServerEvent } from "@talesauce/shared";
 
 export interface ChatMessage { role: "user" | "assistant"; kind: "chat" | "task" | "question" | "result"; content: string; }
 
+export interface PermissionAsk { requestId: string; tool: string; summary: string; }
+
 export interface AppState {
   agents: Record<string, AgentRuntime>;
   chat: Record<string, string>;          // live streaming buffer per agent
   messages: Record<string, ChatMessage[]>;
+  permissions: Record<string, PermissionAsk[]>;
 }
 
 export function initialState(): AppState {
-  return { agents: {}, chat: {}, messages: {} };
+  return { agents: {}, chat: {}, messages: {}, permissions: {} };
 }
 
 export function applyEvent(s: AppState, e: ServerEvent): AppState {
@@ -40,6 +43,13 @@ export function applyEvent(s: AppState, e: ServerEvent): AppState {
     }
     case "error":
       return pushMsg(clearChat(s, e.agentId), e.agentId, { role: "assistant", kind: "result", content: "⚠️ " + e.message });
+    case "permission": {
+      const cur = s.permissions[e.agentId] ?? [];
+      if (cur.some((p) => p.requestId === e.requestId)) return s;
+      return { ...s, permissions: { ...s.permissions, [e.agentId]: [...cur, { requestId: e.requestId, tool: e.tool, summary: e.summary }] } };
+    }
+    case "permission-resolved":
+      return { ...s, permissions: { ...s.permissions, [e.agentId]: (s.permissions[e.agentId] ?? []).filter((p) => p.requestId !== e.requestId) } };
     default:
       return s;
   }
