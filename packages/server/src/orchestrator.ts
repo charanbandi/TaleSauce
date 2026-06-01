@@ -34,6 +34,15 @@ export class Orchestrator {
     if (l.perms.length === 0) this.setState(agentId, "working", "Working: on it…");
   }
 
+  updateAgentConfig(id: string, patch: { name?: string; brainKind?: "openclaw" | "claudecode"; model?: string; sessionId?: string; workingDir?: string }) {
+    const l = this.live.get(id);
+    if (!l) return;
+    this.db.updateAgent(id, patch);
+    const cfg = this.db.getAgent(id)!;
+    l.runtime.config = cfg;
+    l.brain = this.bind(cfg); // rebuild brain with the new config (e.g. switched kind / new cwd)
+  }
+
   addAgent(cfg: AgentConfig): AgentRuntime {
     this.db.insertAgent(cfg);
     const runtime: AgentRuntime = { config: cfg, state: "idle", activity: "Settling in" };

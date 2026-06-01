@@ -1,7 +1,13 @@
 import type { FastifyInstance } from "fastify";
 import { nanoid } from "nanoid";
+import { statSync } from "node:fs";
 import type { AgentConfig } from "@talesauce/shared";
 import { Orchestrator } from "../orchestrator.js";
+
+function validWorkingDir(dir: unknown): dir is string {
+  if (typeof dir !== "string" || !dir) return false;
+  try { return statSync(dir).isDirectory(); } catch { return false; }
+}
 
 const MAX_AGENTS = 6;
 
@@ -28,7 +34,27 @@ export function registerAgentRoutes(app: FastifyInstance, orch: Orchestrator) {
     if (orch.runtimes().length >= MAX_AGENTS)
       return reply.code(400).send({ error: `Max ${MAX_AGENTS} agents` });
     const body = req.body as Omit<AgentConfig, "id">;
+    if ((body as any).brainKind === "claudecode" && !validWorkingDir((body as any).workingDir))
+      return reply.code(400).send({ error: "claudecode agents need a valid workingDir (an existing directory)" });
     const cfg: AgentConfig = { ...body, id: nanoid() };
     return orch.addAgent(cfg);
+  });
+
+  app.post("/agents/:id/decision", async (req, reply) => {
+    const { id } = req.params as { id: string };
+    const { requestId, decision } = req.body as { requestId: string; decision: "allow" | "deny" };
+    if (!requestId || (decision !== "allow" && decision !== "deny"))
+      return reply.code(400).send({ error: "requestId and decision (allow|deny) required" });
+    orch.decide(id, requestId, decision === "allow");
+    return { ok: true };
+  });
+
+  app.patch("/agents/:id", async (req, reply) => {
+    const { id } = req.params as { id: string };
+    const patch = req.body as { name?: string; brainKind?: "openclaw" | "claudecode"; model?: string; sessionId?: string; workingDir?: string };
+    if (patch.brainKind === "claudecode" && patch.workingDir !== undefined && !validWorkingDir(patch.workingDir))
+      return reply.code(400).send({ error: "workingDir must be an existing directory" });
+    orch.updateAgentConfig(id, patch);
+    return { ok: true };
   });
 }
