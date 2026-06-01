@@ -14,6 +14,12 @@ export class Db {
     this.db = new Database(path);
     this.db.pragma("journal_mode = WAL");
     this.db.exec(SCHEMA);
+    this.migrate();
+  }
+
+  private migrate(): void {
+    const cols = (this.db.prepare("PRAGMA table_info(agents)").all() as any[]).map((c) => c.name);
+    if (!cols.includes("working_dir")) this.db.exec("ALTER TABLE agents ADD COLUMN working_dir TEXT");
   }
 
   listAgents(): AgentConfig[] {
@@ -27,23 +33,23 @@ export class Db {
 
   insertAgent(a: AgentConfig): void {
     this.db.prepare(
-      `INSERT INTO agents (id,name,environment,brain_kind,model,session_id,personality,pos_x,pos_y,created_at)
-       VALUES (@id,@name,@environment,@brainKind,@model,@sessionId,@personality,@posX,@posY,@createdAt)`
+      `INSERT INTO agents (id,name,environment,brain_kind,model,session_id,working_dir,personality,pos_x,pos_y,created_at)
+       VALUES (@id,@name,@environment,@brainKind,@model,@sessionId,@workingDir,@personality,@posX,@posY,@createdAt)`
     ).run({
       id: a.id, name: a.name, environment: a.environment, brainKind: a.brainKind,
-      model: a.model ?? null, sessionId: a.sessionId ?? null,
+      model: a.model ?? null, sessionId: a.sessionId ?? null, workingDir: a.workingDir ?? null,
       personality: JSON.stringify(a.personality), posX: a.pos.x, posY: a.pos.y,
       createdAt: Date.now(),
     });
   }
 
-  updateAgent(id: string, patch: Partial<Pick<AgentConfig, "name" | "brainKind" | "model" | "sessionId">>): void {
+  updateAgent(id: string, patch: Partial<Pick<AgentConfig, "name" | "brainKind" | "model" | "sessionId" | "workingDir">>): void {
     const cur = this.getAgent(id);
     if (!cur) return;
     const next = { ...cur, ...patch };
     this.db.prepare(
-      `UPDATE agents SET name=@name, brain_kind=@brainKind, model=@model, session_id=@sessionId WHERE id=@id`
-    ).run({ id, name: next.name, brainKind: next.brainKind, model: next.model ?? null, sessionId: next.sessionId ?? null });
+      `UPDATE agents SET name=@name, brain_kind=@brainKind, model=@model, session_id=@sessionId, working_dir=@workingDir WHERE id=@id`
+    ).run({ id, name: next.name, brainKind: next.brainKind, model: next.model ?? null, sessionId: next.sessionId ?? null, workingDir: next.workingDir ?? null });
   }
 
   getAgent(id: string): AgentConfig | undefined {
@@ -79,6 +85,7 @@ export class Db {
   private rowToAgent = (r: any): AgentConfig => ({
     id: r.id, name: r.name, environment: r.environment, brainKind: r.brain_kind,
     model: r.model ?? undefined, sessionId: r.session_id ?? undefined,
+    workingDir: r.working_dir ?? undefined,
     personality: JSON.parse(r.personality), pos: { x: r.pos_x, y: r.pos_y },
   });
 }

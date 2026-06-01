@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS agents (
   brain_kind TEXT NOT NULL,
   model TEXT,
   session_id TEXT,
+  working_dir TEXT,
   personality TEXT NOT NULL,   -- JSON
   pos_x REAL NOT NULL,
   pos_y REAL NOT NULL,

@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import Database from "better-sqlite3";
 import { Db } from "./db.js";
 import type { AgentConfig } from "@talesauce/shared";
 
@@ -34,5 +35,26 @@ describe("Db", () => {
     expect(db.getSettings().sliderPct).toBe(50);
     db.saveSettings({ sliderPct: 30, focus: "farm" });
     expect(db.getSettings()).toEqual({ sliderPct: 30, focus: "farm" });
+  });
+});
+
+describe("Db migration", () => {
+  it("ALTER adds working_dir to an old-schema agents table", () => {
+    const raw = new Database(":memory:");
+    raw.exec(`CREATE TABLE agents (id TEXT PRIMARY KEY, name TEXT, environment TEXT, brain_kind TEXT, model TEXT, session_id TEXT, personality TEXT, pos_x REAL, pos_y REAL, created_at INTEGER);`);
+    raw.prepare(`INSERT INTO agents VALUES ('a1','W','farm','openclaw',null,null,'{}',1,1,1)`).run();
+    const cols = () => (raw.prepare("PRAGMA table_info(agents)").all() as any[]).map((c) => c.name);
+    expect(cols()).not.toContain("working_dir");
+    raw.exec("ALTER TABLE agents ADD COLUMN working_dir TEXT");
+    expect(cols()).toContain("working_dir");
+    expect((raw.prepare("SELECT id FROM agents").get() as any).id).toBe("a1");
+  });
+
+  it("Db round-trips workingDir", () => {
+    const db = new Db(":memory:");
+    db.insertAgent({ id: "k", name: "Kai", environment: "office", brainKind: "claudecode",
+      personality: { skill: "", personality: "", speakingStyle: "", appearance: "", idleActions: [], workAnimation: "" },
+      pos: { x: 6, y: 6 }, workingDir: "/repo" });
+    expect(db.getAgent("k")!.workingDir).toBe("/repo");
   });
 });
