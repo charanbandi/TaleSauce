@@ -1,32 +1,45 @@
 import Phaser from "phaser";
-import { TILESETS, CHARACTERS, TILE_SIZE } from "../assets/manifest.js";
+import { TILESETS, IMAGES, CHARACTERS, TILE_SIZE } from "../assets/manifest.js";
 import { AgentSprite } from "../AgentSprite.js";
 import { useStore } from "../../store/store.js";
 import { workstationFor, type ActionSpot } from "../ActionSystem.js";
 import type { Environment } from "@talesauce/shared";
 
-/** Shared loading + a procedurally-built ground so a scene always renders even if a tile asset is missing. */
+/** Shared loading + tile painting helpers. */
 export abstract class BaseScene extends Phaser.Scene {
   protected agents = new Map<string, AgentSprite>();
   private unsubscribe?: () => void;
 
   preload() {
-    for (const t of TILESETS) this.load.image(t.key, t.url);
+    for (const t of TILESETS) this.load.spritesheet(t.key, t.url, { frameWidth: t.frameWidth, frameHeight: t.frameHeight });
+    for (const i of IMAGES) this.load.image(i.key, i.url);
     for (const c of CHARACTERS) this.load.spritesheet(c.key, c.url, { frameWidth: c.frameWidth, frameHeight: c.frameHeight });
     this.load.on("loaderror", (file: any) => console.warn("asset failed:", file?.key));
   }
 
-  /** Fallback checkerboard ground so a missing tilemap never blanks the scene. */
-  protected drawFallbackGround(colorA: number, colorB: number) {
-    const g = this.add.graphics();
-    const cols = Math.ceil(this.scale.width / TILE_SIZE);
-    const rows = Math.ceil(this.scale.height / TILE_SIZE);
-    for (let y = 0; y < rows; y++)
-      for (let x = 0; x < cols; x++) {
-        g.fillStyle((x + y) % 2 ? colorA : colorB, 1);
-        g.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-      }
-    g.setDepth(-100);
+  /** Fill the scene with one tile (depth -100). Uses a large fixed coverage so it works
+   *  regardless of the canvas size at create() time under Scale.RESIZE. */
+  protected paintGround(key: string, frame = 0, bgColor = "#000000") {
+    this.cameras.main.setBackgroundColor(bgColor);
+    if (!this.textures.exists(key)) return;
+    const COVER = 4096;
+    this.add.tileSprite(0, 0, COVER, COVER, key, frame).setOrigin(0, 0).setDepth(-100);
+  }
+
+  /** Scatter a tile at random spots for ground texture (depth -90). */
+  protected scatter(key: string, frame: number, count: number) {
+    if (!this.textures.exists(key)) return;
+    for (let i = 0; i < count; i++) {
+      const x = Phaser.Math.Between(0, this.scale.width);
+      const y = Phaser.Math.Between(0, this.scale.height);
+      this.add.image(x, y, key, frame).setDepth(-90);
+    }
+  }
+
+  /** Place a whole image prop at a tile coordinate (origin bottom-center), scaled. */
+  protected placeImage(key: string, tileX: number, tileY: number, scale = 1, depth = 0) {
+    if (!this.textures.exists(key)) return;
+    this.add.image(tileX * TILE_SIZE, tileY * TILE_SIZE, key).setOrigin(0.5, 1).setScale(scale).setDepth(depth);
   }
 
   protected registerAnimations() {
@@ -34,12 +47,13 @@ export abstract class BaseScene extends Phaser.Scene {
       if (this.anims.exists(key)) return;
       this.anims.create({ key, frames: this.anims.generateFrameNumbers("char", { start, end }), frameRate: rate, repeat });
     };
-    // Frame indices match the placeholder sheet (0–3 walk, 4–7 work, 8–9 wave). Adjust when real art is dropped in.
-    def("idle", 0, 0, 1);
-    def("walk-down", 0, 3);
-    def("work-loop", 4, 7);
-    def("wave", 8, 9, 4);
-    def("talk", 8, 9, 3);
+    // Sprout Lands basic character sheet: 4×4 grid of front-facing bounce frames.
+    // Row 0 (0–3) reads as an idle/walk bounce; we reuse it across states for Phase 1.
+    def("idle", 0, 1, 2);
+    def("walk-down", 0, 3, 6);
+    def("work-loop", 0, 3, 9);
+    def("wave", 12, 15, 5);
+    def("talk", 8, 11, 4);
   }
 
   protected spawnAgents(env: Environment, spots: ActionSpot[], frontPoint: { x: number; y: number }) {
@@ -56,7 +70,6 @@ export abstract class BaseScene extends Phaser.Scene {
     };
     render();
     this.unsubscribe = useStore.subscribe(render); // re-render agents whenever store state changes
-    // clean up the subscription when the scene shuts down (prevents leaks on scene re-create)
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.unsubscribe?.());
     this.events.once(Phaser.Scenes.Events.DESTROY, () => this.unsubscribe?.());
   }
