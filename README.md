@@ -5,7 +5,7 @@ pixel-art character that lives in an environment, does ambient "life" actions
 when idle, and real work when you give it a task — walking to its workstation to
 work, to the front of the stage to **report**, or to **ask you a clarifying
 question**. Agents are backed by interchangeable brains: a hosted **OpenClaw**
-endpoint today, with a local **Claude Code** session bridge planned for Phase 2.
+endpoint and a local **Claude Code** session bridge (Phase 2).
 
 ![TaleSauce](docs/screenshot-placeholder.png)
 
@@ -41,8 +41,29 @@ Open http://localhost:5173.
   (key stays server-side) and uses a small system-prompt protocol — the agent
   emits `❓QUESTION: …` to ask you something and `✅DONE: …` to finish — which the
   server turns into the walk-to-front / report character actions.
-- **Per-agent config.** Brain, model, and (Phase 2) Claude Code session id are
+- **Per-agent config.** Brain, model, and Claude Code session id are
   configurable per agent; up to 6 agents across the two environments.
+- **CodingAgentBridge seam.** Coding-agent CLIs sit behind a `CodingAgentBridge`
+  interface; Claude Code is wired today (Agent SDK), with Codex/Cursor as future
+  drop-ins.
+
+## Brains & onboarding
+
+The app adapts to whichever brains you configure. No agents are seeded until at
+least one brain is available; if none are configured, the app shows an onboarding
+screen listing the env vars to add.
+
+- **OpenClaw:** set `OPENCLAW_API_URL` + `OPENCLAW_API_KEY` in `.env`.
+- **Claude Code:** set `CLAUDE_CODE_ENABLED=true` (uses your local Claude Code
+  login) or set `ANTHROPIC_API_KEY`. A Claude Code agent needs a **working
+  directory** (the repo it operates on) — set it in the agent's Config panel when
+  adding the agent. Risky tools (Bash/Write/Edit) are gated as in-game
+  **Allow/Deny** asks: the agent walks to the front of the stage and raises a card
+  before executing; read-only tools (Read/Grep/Glob/LS) are auto-approved. You can
+  paste a **session id** to resume an existing conversation, or leave it blank to
+  start a fresh session (the new id is shown once it starts).
+
+Up to 6 agents total; each agent's brain is configured independently.
 
 ## Testing
 
@@ -56,10 +77,13 @@ the SQLite layer, and the client event reducer.
 
 ## Roadmap
 
-- **Phase 2:** real local **Claude Code** bridge (Claude Agent SDK, session
-  resume, streaming, native clarifying-question/permission surfacing); richer
-  office; per-agent brain switching in the UI.
-- **Phase 3:** more named characters, richer actions/animations, sound, polish.
+- **Phase 2 (done):** local **Claude Code** brain via the Claude Agent SDK —
+  per-agent working directory, optional session resume, and **in-game
+  tool-permission asks** (the agent walks to the front with an Allow/Deny card
+  before running Bash/Write/Edit). Capability-driven onboarding and a furnished
+  office.
+- **Phase 3:** Codex CLI + Cursor CLI adapters (drop-ins behind the
+  `CodingAgentBridge` seam), sound, more characters, richer farm.
 
 ## Assets
 
