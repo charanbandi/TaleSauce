@@ -8,6 +8,7 @@ export type AgentVisualState =
   | "working"
   | "walking-to-front"
   | "awaiting-user"
+  | "awaiting-permission"
   | "reporting"
   | "error";
 
@@ -29,6 +30,8 @@ export interface AgentConfig {
   model?: string;
   /** Claude Code session id (Phase 2; unused in Phase 1). */
   sessionId?: string;
+  /** Local repo the claudecode agent works in (SDK cwd). Required for brainKind "claudecode". */
+  workingDir?: string;
   personality: AgentPersonality;
   pos: { x: number; y: number };
 }
