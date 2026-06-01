@@ -3,7 +3,8 @@ export type BrainEvent =
   | { type: "state"; state: "working" | "needs-input" | "reporting" | "done" | "error" }
   | { type: "question"; text: string }
   | { type: "result"; text: string }
-  | { type: "error"; message: string };
+  | { type: "error"; message: string }
+  | { type: "permission"; requestId: string; tool: string; summary: string };
 
 export type BrainListener = (e: BrainEvent) => void;
 
