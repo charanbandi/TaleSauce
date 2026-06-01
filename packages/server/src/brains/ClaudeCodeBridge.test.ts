@@ -56,6 +56,26 @@ describe("ClaudeCodeBridge", () => {
     await vi.waitFor(() => expect(events.some((e) => e.type === "result")).toBe(true));
   });
 
+  it("does not double-emit when stream_event deltas precede the assistant message", async () => {
+    const events: BrainEvent[] = [];
+    const streamMsg = (text: string): SdkMessage => ({ type: "stream_event", event: { type: "content_block_delta", delta: { type: "text_delta", text } } });
+    const bridge = new ClaudeCodeBridge(
+      fakeQuery([
+        { type: "system", subtype: "init", session_id: "s1" },
+        streamMsg("Hello "),
+        streamMsg("world"),
+        { type: "assistant", message: { content: [{ type: "text", text: "Hello world" }] } },
+        { type: "result", subtype: "success", result: "ok" },
+      ]),
+      () => {},
+    );
+    bridge.on((e) => events.push(e));
+    bridge.start("hi", { cwd: "/repo" });
+    await vi.waitFor(() => expect(events.some((e) => e.type === "result")).toBe(true));
+    const tokens = events.filter((e) => e.type === "token").map((e: any) => e.text).join("");
+    expect(tokens).toBe("Hello world"); // exactly once, not "Hello worldHello world"
+  });
+
   it("stop() denies any pending permission so nothing hangs", async () => {
     const events: BrainEvent[] = [];
     const bridge = new ClaudeCodeBridge(

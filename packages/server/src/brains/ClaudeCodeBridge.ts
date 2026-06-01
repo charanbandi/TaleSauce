@@ -11,6 +11,7 @@ class InputQueue {
   private resolvers: ((v: IteratorResult<unknown>) => void)[] = [];
   private closed = false;
   push(item: unknown) {
+    if (this.closed) return;
     const r = this.resolvers.shift();
     if (r) r({ value: item, done: false });
     else this.items.push(item);
@@ -45,6 +46,7 @@ export class ClaudeCodeBridge implements CodingAgentBridge {
   private pending = new Map<string, (r: PermissionResult) => void>();
   private q?: SdkQuery;
   private stopped = false;
+  private streamedThisTurn = false;
 
   constructor(private queryFn: QueryFn, private onSession: SessionListener = () => {}) {}
 
@@ -80,7 +82,7 @@ export class ClaudeCodeBridge implements CodingAgentBridge {
   stop() {
     this.stopped = true;
     this.input.close();
-    this.q?.interrupt?.();
+    void this.q?.interrupt?.()?.catch(() => {});
     for (const [, resolve] of this.pending) resolve({ behavior: "deny", message: "Stopped", interrupt: true });
     this.pending.clear();
   }
@@ -103,18 +105,27 @@ export class ClaudeCodeBridge implements CodingAgentBridge {
   }
 
   private handle(msg: SdkMessage) {
+    if (this.stopped) return;
     if (msg.type === "system" && msg.session_id) { this.onSession(msg.session_id); return; }
     if (msg.type === "stream_event") {
       const d = msg.event?.delta;
-      if (msg.event?.type === "content_block_delta" && d?.type === "text_delta" && d.text) this.emit({ type: "token", text: d.text });
+      if (msg.event?.type === "content_block_delta" && d?.type === "text_delta" && d.text) {
+        this.streamedThisTurn = true;
+        this.emit({ type: "token", text: d.text });
+      }
       return;
     }
     if (msg.type === "assistant") {
+      if (this.streamedThisTurn) {
+        this.streamedThisTurn = false;
+        return;
+      }
       const text = (msg.message?.content ?? []).filter((c) => c.type === "text").map((c) => c.text ?? "").join("");
       if (text) this.emit({ type: "token", text });
       return;
     }
     if (msg.type === "result") {
+      this.streamedThisTurn = false;
       this.emit({ type: "state", state: "reporting" });
       this.emit({ type: "result", text: msg.result ?? "Done." });
       this.emit({ type: "state", state: "done" });
