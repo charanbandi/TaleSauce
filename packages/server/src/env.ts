@@ -3,6 +3,9 @@ export interface Env {
   openclawKey: string;
   taskModel?: string;
   idleModel?: string;
+  anthropicKey?: string;
+  claudeCodeEnabled: boolean;
+  defaultBrain?: "openclaw" | "claudecode";
   serverPort: number;
   dbPath: string;
 }
@@ -14,15 +17,15 @@ function parsePort(raw: string | undefined): number {
 }
 
 export function loadEnv(src: NodeJS.ProcessEnv = process.env): Env {
-  const openclawUrl = src.OPENCLAW_API_URL;
-  const openclawKey = src.OPENCLAW_API_KEY;
-  if (!openclawUrl) throw new Error("Missing env OPENCLAW_API_URL");
-  if (!openclawKey) throw new Error("Missing env OPENCLAW_API_KEY");
+  const rawDefault = src.DEFAULT_BRAIN;
   return {
-    openclawUrl,
-    openclawKey,
+    openclawUrl: src.OPENCLAW_API_URL ?? "",
+    openclawKey: src.OPENCLAW_API_KEY ?? "",
     taskModel: src.OPENCLAW_TASK_MODEL || undefined,
     idleModel: src.OPENCLAW_IDLE_MODEL || undefined,
+    anthropicKey: src.ANTHROPIC_API_KEY || undefined,
+    claudeCodeEnabled: src.CLAUDE_CODE_ENABLED === "true" || !!src.ANTHROPIC_API_KEY,
+    defaultBrain: rawDefault === "openclaw" || rawDefault === "claudecode" ? rawDefault : undefined,
     serverPort: parsePort(src.SERVER_PORT),
     dbPath: src.DB_PATH ?? "./talesauce.sqlite",
   };

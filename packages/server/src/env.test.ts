@@ -8,8 +8,14 @@ describe("loadEnv", () => {
     expect(e.dbPath).toBe("./talesauce.sqlite");
     expect(e.openclawUrl).toBe("u");
   });
-  it("throws when required key missing", () => {
-    expect(() => loadEnv({ OPENCLAW_API_URL: "u" })).toThrow(/OPENCLAW_API_KEY/);
+  it("returns empty openclaw fields when unset (capabilities decides availability)", () => {
+    const e = loadEnv({});
+    expect(e.openclawUrl).toBe("");
+    expect(e.openclawKey).toBe("");
+    expect(e.claudeCodeEnabled).toBe(false);
+  });
+  it("claudeCodeEnabled true when ANTHROPIC_API_KEY set", () => {
+    expect(loadEnv({ ANTHROPIC_API_KEY: "sk-x" }).claudeCodeEnabled).toBe(true);
   });
   it("throws on invalid SERVER_PORT", () => {
     expect(() =>
