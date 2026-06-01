@@ -6,10 +6,12 @@ import type { ServerEvent, AgentConfig } from "@talesauce/shared";
 
 class FakeBrain implements AgentBrain {
   listener?: BrainListener;
+  decided?: { requestId: string; allow: boolean };
   on(l: BrainListener) { this.listener = l; }
   start() {}
   send() {}
   stop() {}
+  decide(requestId: string, allow: boolean) { this.decided = { requestId, allow }; }
   fire(e: BrainEvent) { this.listener?.(e); }
 }
 
@@ -77,5 +79,25 @@ describe("Orchestrator", () => {
     expect(ev.message).toBe("down");
     const last = out.filter((e) => e.type === "agent-state").map((e: any) => e.state).pop();
     expect(last).toBe("idle");
+  });
+
+  it("maps a permission BrainEvent to awaiting-permission + permission ServerEvent and tracks it", () => {
+    const { orch, fake, out } = setup();
+    orch.startTask("a1", "x");
+    fake.fire({ type: "permission", requestId: "r1", tool: "Bash", summary: "Run: npm test" });
+    const states = out.filter((e) => e.type === "agent-state").map((e: any) => e.state);
+    expect(states).toContain("awaiting-permission");
+    expect(out).toContainEqual({ type: "permission", agentId: "a1", requestId: "r1", tool: "Bash", summary: "Run: npm test" });
+    expect(orch.pendingPermissions("a1")).toContainEqual({ requestId: "r1", tool: "Bash", summary: "Run: npm test" });
+  });
+
+  it("decide() forwards to the brain and emits permission-resolved", () => {
+    const { orch, fake, out } = setup();
+    orch.startTask("a1", "x");
+    fake.fire({ type: "permission", requestId: "r1", tool: "Bash", summary: "Run: npm test" });
+    orch.decide("a1", "r1", true);
+    expect((fake as any).decided).toEqual({ requestId: "r1", allow: true });
+    expect(out).toContainEqual({ type: "permission-resolved", agentId: "a1", requestId: "r1" });
+    expect(orch.pendingPermissions("a1")).toEqual([]);
   });
 });

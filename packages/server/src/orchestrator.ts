@@ -5,7 +5,8 @@ import { Db } from "./db/db.js";
 export type BrainFactory = (agent: AgentConfig) => AgentBrain;
 type EventSink = (e: ServerEvent) => void;
 
-interface Live { brain: AgentBrain; runtime: AgentRuntime; }
+interface PendingPerm { requestId: string; tool: string; summary: string; }
+interface Live { brain: AgentBrain; runtime: AgentRuntime; perms: PendingPerm[]; }
 
 export class Orchestrator {
   private live = new Map<string, Live>();
@@ -13,7 +14,7 @@ export class Orchestrator {
 
   constructor(private db: Db, private makeBrain: BrainFactory) {
     for (const cfg of db.listAgents()) {
-      this.live.set(cfg.id, { brain: this.bind(cfg), runtime: { config: cfg, state: "idle", activity: "Hanging out" } });
+      this.live.set(cfg.id, { brain: this.bind(cfg), runtime: { config: cfg, state: "idle", activity: "Hanging out" }, perms: [] });
     }
   }
 
@@ -22,10 +23,21 @@ export class Orchestrator {
 
   runtimes(): AgentRuntime[] { return [...this.live.values()].map((l) => l.runtime); }
 
+  pendingPermissions(id: string): PendingPerm[] { return this.live.get(id)?.perms ?? []; }
+
+  decide(agentId: string, requestId: string, allow: boolean) {
+    const l = this.live.get(agentId);
+    if (!l) return;
+    l.perms = l.perms.filter((p) => p.requestId !== requestId);
+    (l.brain as { decide?: (r: string, a: boolean) => void }).decide?.(requestId, allow);
+    this.emit({ type: "permission-resolved", agentId, requestId });
+    if (l.perms.length === 0) this.setState(agentId, "working", "Working: on it…");
+  }
+
   addAgent(cfg: AgentConfig): AgentRuntime {
     this.db.insertAgent(cfg);
     const runtime: AgentRuntime = { config: cfg, state: "idle", activity: "Settling in" };
-    this.live.set(cfg.id, { brain: this.bind(cfg), runtime });
+    this.live.set(cfg.id, { brain: this.bind(cfg), runtime, perms: [] });
     this.emit({ type: "agent-added", agent: runtime });
     return runtime;
   }
@@ -82,6 +94,13 @@ export class Orchestrator {
         this.emit({ type: "error", agentId: id, message: e.message });
         this.setState(id, "idle", "Took a breather (error)");
         break;
+      case "permission": {
+        const l = this.live.get(id);
+        if (l) l.perms.push({ requestId: e.requestId, tool: e.tool, summary: e.summary });
+        this.setState(id, "awaiting-permission", `Asking: ${e.summary}`);
+        this.emit({ type: "permission", agentId: id, requestId: e.requestId, tool: e.tool, summary: e.summary });
+        break;
+      }
     }
   }
 }
