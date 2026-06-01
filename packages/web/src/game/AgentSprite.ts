@@ -56,6 +56,6 @@ export class AgentSprite {
   }
 
   private bubbleGlyph(b: SpriteIntent["bubble"]): string {
-    return { none: "", thinking: "💭", question: "❓", result: "💬", alert: "❗" }[b];
+    return { none: "", thinking: "💭", question: "❓", result: "💬", alert: "❗", permission: "🔑" }[b];
   }
 }

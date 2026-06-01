@@ -1,7 +1,7 @@
 import type { AgentVisualState } from "@talesauce/shared";
 
 export type MoveTarget = "wander" | "workstation" | "front";
-export type BubbleKind = "none" | "thinking" | "question" | "result" | "alert";
+export type BubbleKind = "none" | "thinking" | "question" | "result" | "alert" | "permission";
 
 export interface SpriteIntent {
   move: MoveTarget;
@@ -17,6 +17,8 @@ export function nextSpriteIntent(state: AgentVisualState): SpriteIntent {
       return { move: "workstation", anim: "work-loop", bubble: "thinking" };
     case "walking-to-front":
       return { move: "front", anim: "walk", bubble: "thinking" };
+    case "awaiting-permission":
+      return { move: "front", anim: "wave", bubble: "permission" };
     case "awaiting-user":
       return { move: "front", anim: "wave", bubble: "question" };
     case "reporting":

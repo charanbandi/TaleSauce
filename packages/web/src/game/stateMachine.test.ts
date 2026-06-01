@@ -17,4 +17,7 @@ describe("nextSpriteIntent", () => {
   it("shows alert bubble on error", () => {
     expect(nextSpriteIntent("error").bubble).toBe("alert");
   });
+  it("awaiting-permission walks to front with a permission bubble", () => {
+    expect(nextSpriteIntent("awaiting-permission")).toEqual({ move: "front", anim: "wave", bubble: "permission" });
+  });
 });
