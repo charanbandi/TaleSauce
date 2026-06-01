@@ -26,7 +26,7 @@ export function buildSystemPrompt(a: AgentConfig): string {
 let realQuery: QueryFn | undefined;
 async function loadRealQuery(): Promise<QueryFn> {
   if (!realQuery) {
-    // @ts-expect-error — package installed at runtime only; not in devDependencies
+    // @ts-ignore — package is installed at runtime only (see Phase 2 E2E task); may be absent at build time
     const sdk = await import("@anthropic-ai/claude-agent-sdk");
     realQuery = ((args: any) => (sdk as any).query(args)) as QueryFn;
   }
