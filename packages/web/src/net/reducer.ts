@@ -30,8 +30,14 @@ export function applyEvent(s: AppState, e: ServerEvent): AppState {
       return { ...s, chat: { ...s.chat, [e.agentId]: (s.chat[e.agentId] ?? "") + e.text } };
     case "question":
       return pushMsg(clearChat(s, e.agentId), e.agentId, { role: "assistant", kind: "question", content: e.text });
-    case "result":
-      return pushMsg(clearChat(s, e.agentId), e.agentId, { role: "assistant", kind: "result", content: e.text });
+    case "result": {
+      // Keep the text the user just watched stream in as the committed message, so the
+      // reply isn't replaced by a one-shot summary. Fall back to the result text when
+      // nothing streamed (e.g. the model answered only via the ✅DONE line).
+      const streamed = (s.chat[e.agentId] ?? "").trim();
+      const content = streamed || e.text;
+      return pushMsg(clearChat(s, e.agentId), e.agentId, { role: "assistant", kind: "result", content });
+    }
     case "error":
       return pushMsg(clearChat(s, e.agentId), e.agentId, { role: "assistant", kind: "result", content: "⚠️ " + e.message });
     default:

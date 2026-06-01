@@ -25,12 +25,18 @@ describe("applyEvent", () => {
     s = applyEvent(s, { type: "token", agentId: "a1", text: "llo" });
     expect(s.chat.a1).toBe("hello");
   });
-  it("result clears the streaming buffer and stores a message", () => {
+  it("result commits the streamed text (not the summary) and clears the buffer", () => {
     let s = applyEvent(initialState(), { type: "hello", agents: [rt("a1")] });
-    s = applyEvent(s, { type: "token", agentId: "a1", text: "x" });
-    s = applyEvent(s, { type: "result", agentId: "a1", text: "done" });
+    s = applyEvent(s, { type: "token", agentId: "a1", text: "Watering " });
+    s = applyEvent(s, { type: "token", agentId: "a1", text: "the crops" });
+    s = applyEvent(s, { type: "result", agentId: "a1", text: "Watered everything." });
     expect(s.chat.a1).toBe("");
-    expect(s.messages.a1.at(-1)).toEqual({ role: "assistant", kind: "result", content: "done" });
+    expect(s.messages.a1.at(-1)).toEqual({ role: "assistant", kind: "result", content: "Watering the crops" });
+  });
+  it("result falls back to the summary when nothing streamed", () => {
+    let s = applyEvent(initialState(), { type: "hello", agents: [rt("a1")] });
+    s = applyEvent(s, { type: "result", agentId: "a1", text: "All done." });
+    expect(s.messages.a1.at(-1)).toEqual({ role: "assistant", kind: "result", content: "All done." });
   });
   it("question stores a question message", () => {
     let s = applyEvent(initialState(), { type: "hello", agents: [rt("a1")] });
