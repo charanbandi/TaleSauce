@@ -2,6 +2,7 @@ import type { AgentConfig } from "@talesauce/shared";
 import type { AgentBrain } from "./AgentBrain.js";
 import { OpenClawBrain } from "./OpenClawBrain.js";
 import { ClaudeCodeBrain } from "./ClaudeCodeBrain.js";
+import { CliAgentBrain } from "./CliAgentBrain.js";
 import type { QueryFn } from "./CodingAgentBridge.js";
 import { Db } from "../db/db.js";
 import type { Env } from "../env.js";
@@ -26,7 +27,7 @@ export function buildSystemPrompt(a: AgentConfig): string {
 let realQuery: QueryFn | undefined;
 async function loadRealQuery(): Promise<QueryFn> {
   if (!realQuery) {
-    // @ts-ignore — package is installed at runtime only (see Phase 2 E2E task); may be absent at build time
+    // @ts-ignore — package is installed at runtime only; may be absent at build time
     const sdk = await import("@anthropic-ai/claude-agent-sdk");
     realQuery = ((args: any) => (sdk as any).query(args)) as QueryFn;
   }
@@ -52,6 +53,17 @@ export function makeBrainFactory(db: Db, env: Env) {
         onSession: (id) => db.updateAgent(agent.id, { sessionId: id }),
       });
     }
+
+    if (agent.brainKind === "codex" || agent.brainKind === "cursor") {
+      return new CliAgentBrain({
+        kind: agent.brainKind,
+        cwd: agent.workingDir ?? "",
+        sessionId: agent.sessionId,
+        onSession: (id) => db.updateAgent(agent.id, { sessionId: id }),
+      });
+    }
+
+    // openclaw (default)
     const history = db.listMessages(agent.id).map((m) => ({ role: m.role, content: m.content }));
     return new OpenClawBrain({
       url: env.openclawUrl, key: env.openclawKey,
