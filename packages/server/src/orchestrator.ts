@@ -1,4 +1,4 @@
-import type { AgentConfig, AgentRuntime, AgentVisualState, ServerEvent } from "@talesauce/shared";
+import type { AgentConfig, AgentRuntime, AgentVisualState, BrainKind, ServerEvent } from "@talesauce/shared";
 import type { AgentBrain, BrainEvent } from "./brains/AgentBrain.js";
 import { Db } from "./db/db.js";
 
@@ -34,7 +34,7 @@ export class Orchestrator {
     if (l.perms.length === 0) this.setState(agentId, "working", "Working: on it…");
   }
 
-  updateAgentConfig(id: string, patch: { name?: string; brainKind?: "openclaw" | "claudecode"; model?: string; sessionId?: string; workingDir?: string }) {
+  updateAgentConfig(id: string, patch: { name?: string; brainKind?: BrainKind; model?: string; sessionId?: string; workingDir?: string }) {
     const l = this.live.get(id);
     if (!l) return;
     this.db.updateAgent(id, patch);

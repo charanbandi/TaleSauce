@@ -1,8 +1,10 @@
 import type { FastifyInstance } from "fastify";
 import { nanoid } from "nanoid";
 import { statSync } from "node:fs";
-import type { AgentConfig } from "@talesauce/shared";
+import type { AgentConfig, BrainKind } from "@talesauce/shared";
 import { Orchestrator } from "../orchestrator.js";
+
+const CODING_BRAINS: BrainKind[] = ["claudecode", "codex", "cursor"];
 
 function validWorkingDir(dir: unknown): dir is string {
   if (typeof dir !== "string" || !dir) return false;
@@ -34,8 +36,9 @@ export function registerAgentRoutes(app: FastifyInstance, orch: Orchestrator) {
     if (orch.runtimes().length >= MAX_AGENTS)
       return reply.code(400).send({ error: `Max ${MAX_AGENTS} agents` });
     const body = req.body as Omit<AgentConfig, "id">;
-    if ((body as any).brainKind === "claudecode" && !validWorkingDir((body as any).workingDir))
-      return reply.code(400).send({ error: "claudecode agents need a valid workingDir (an existing directory)" });
+    const kind = (body as any).brainKind as BrainKind;
+    if (CODING_BRAINS.includes(kind) && !validWorkingDir((body as any).workingDir))
+      return reply.code(400).send({ error: `${kind} agents need a valid workingDir (an existing directory)` });
     const cfg: AgentConfig = { ...body, id: nanoid() };
     return orch.addAgent(cfg);
   });
@@ -51,8 +54,8 @@ export function registerAgentRoutes(app: FastifyInstance, orch: Orchestrator) {
 
   app.patch("/agents/:id", async (req, reply) => {
     const { id } = req.params as { id: string };
-    const patch = req.body as { name?: string; brainKind?: "openclaw" | "claudecode"; model?: string; sessionId?: string; workingDir?: string };
-    if (patch.brainKind === "claudecode" && patch.workingDir !== undefined && !validWorkingDir(patch.workingDir))
+    const patch = req.body as { name?: string; brainKind?: BrainKind; model?: string; sessionId?: string; workingDir?: string };
+    if (patch.brainKind && CODING_BRAINS.includes(patch.brainKind) && patch.workingDir !== undefined && !validWorkingDir(patch.workingDir))
       return reply.code(400).send({ error: "workingDir must be an existing directory" });
     orch.updateAgentConfig(id, patch);
     return { ok: true };
