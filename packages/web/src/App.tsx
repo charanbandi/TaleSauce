@@ -7,7 +7,7 @@ import { Onboarding } from "./app/Onboarding.js";
 import { connectWs } from "./net/ws.js";
 import { getCapabilities } from "./net/rest.js";
 
-type Caps = { openclaw: boolean; claudecode: boolean; defaultBrain: string | null };
+type Caps = { openclaw: boolean; claudecode: boolean; codex: boolean; cursor: boolean; defaultBrain: string | null };
 
 export function App() {
   const [wsOk, setWsOk] = useState(false);
@@ -16,11 +16,13 @@ export function App() {
 
   useEffect(() => {
     connectWs(setWsOk);
-    getCapabilities().then(setCaps).catch(() => setCaps({ openclaw: false, claudecode: false, defaultBrain: null }));
+    getCapabilities().then(setCaps).catch(() =>
+      setCaps({ openclaw: false, claudecode: false, codex: false, cursor: false, defaultBrain: null })
+    );
   }, []);
 
   if (!caps) return <div style={{ color: "#fff", padding: 24, fontFamily: "monospace" }}>Loading…</div>;
-  const anyBrain = caps.openclaw || caps.claudecode;
+  const anyBrain = caps.openclaw || caps.claudecode || caps.codex || caps.cursor;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100vh" }}>
