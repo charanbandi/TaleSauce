@@ -1,5 +1,12 @@
 export type Environment = "farm" | "office";
-export type BrainKind = "openclaw" | "claudecode";
+export type BrainKind = "openclaw" | "claudecode" | "codex" | "cursor";
+
+export interface BrainCapabilities {
+  /** interactive = live Allow/Deny cards (Claude Code); sandboxed = surface-only, auto-approved */
+  gating: "interactive" | "sandboxed";
+  /** Whether resume-by-session-id is supported */
+  resumable: boolean;
+}
 
 /** Visual states the orchestrator can put an agent in; the client renders them. */
 export type AgentVisualState =
@@ -30,7 +37,7 @@ export interface AgentConfig {
   model?: string;
   /** Claude Code session id (Phase 2; unused in Phase 1). */
   sessionId?: string;
-  /** Local repo the claudecode agent works in (SDK cwd). Required for brainKind "claudecode". */
+  /** Local repo the agent works in (cwd). Required for brainKind "claudecode", "codex", "cursor". */
   workingDir?: string;
   personality: AgentPersonality;
   pos: { x: number; y: number };
