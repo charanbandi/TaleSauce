@@ -20,6 +20,11 @@ describe("CursorBridge.parseLine", () => {
       .toEqual({ kind: "session", id: "cursor_xyz" });
   });
 
+  it("maps session event (fallback to id key)", () => {
+    expect(b.parseLine({ type: "session", id: "cursor_fallback" }))
+      .toEqual({ kind: "session", id: "cursor_fallback" });
+  });
+
   it("maps message delta to token", () => {
     expect(b.parseLine({ type: "message", delta: "Hello " }))
       .toEqual({ kind: "token", text: "Hello " });
