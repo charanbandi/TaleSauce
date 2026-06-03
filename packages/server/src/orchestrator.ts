@@ -103,6 +103,9 @@ export class Orchestrator {
         this.emit({ type: "error", agentId: id, message: e.message });
         this.setState(id, "idle", "Took a breather (error)");
         break;
+      case "tool-activity":
+        this.setState(id, "working", e.summary);
+        break;
       case "permission": {
         const l = this.live.get(id);
         if (l) l.perms.push({ requestId: e.requestId, tool: e.tool, summary: e.summary });
