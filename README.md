@@ -63,6 +63,34 @@ screen listing the env vars to add.
   paste a **session id** to resume an existing conversation, or leave it blank to
   start a fresh session (the new id is shown once it starts).
 
+### Codex CLI brain (Phase 3)
+
+1. Install: `npm i -g @openai/codex` and run `codex login`
+2. Set `CODEX_ENABLED=true` in `.env`
+3. Restart the server. Add a Codex agent via the **+** button with a `workingDir` pointing to a local repo.
+
+Codex runs **sandboxed** (`workspace-write`): it edits files within the working directory but does not trigger the interactive Allow/Deny permission gate. Tool activity (file edits, shell runs) appears as agent bubbles and dock activity text.
+
+**Live verification** (once installed):
+```bash
+which codex                             # should print a path
+curl localhost:8787/api/capabilities    # should show "codex": true
+```
+
+### Cursor CLI brain (Phase 3)
+
+1. Install `cursor-agent` and run `cursor-agent login`
+2. Set `CURSOR_ENABLED=true` in `.env`
+3. Restart the server. Add a Cursor agent with a `workingDir`.
+
+Same sandboxed behaviour as Codex.
+
+**Live verification** (once installed):
+```bash
+which cursor-agent
+curl localhost:8787/api/capabilities    # should show "cursor": true
+```
+
 Up to 6 agents total; each agent's brain is configured independently.
 
 ## Testing
