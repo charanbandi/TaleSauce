@@ -2,12 +2,11 @@ import { BaseScene } from "./BaseScene.js";
 import { OFFICE_SPOTS } from "../ActionSystem.js";
 import { TILE_SIZE } from "../assets/manifest.js";
 
-const FLOOR_TILE = 0; // floor tile in the Kenney modern-city sheet
 
 export class OfficeScene extends BaseScene {
   constructor() { super("office"); }
   create() {
-    this.paintGround("city", FLOOR_TILE, "#9aa0ac");
+    this.cameras.main.setBackgroundColor("#9aa0ac");
     this.registerAnimations();
 
     const px = (t: number) => t * TILE_SIZE;

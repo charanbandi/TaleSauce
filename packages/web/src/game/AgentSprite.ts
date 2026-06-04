@@ -3,7 +3,7 @@ import { TILE_SIZE } from "./assets/manifest.js";
 import { nextSpriteIntent, type SpriteIntent } from "./stateMachine.js";
 import type { AgentVisualState } from "@talesauce/shared";
 
-export interface AgentSpriteOpts { x: number; y: number; name: string; }
+export interface AgentSpriteOpts { x: number; y: number; name: string; id?: string; }
 
 const SPRITE_SCALE = 2;
 

@@ -2,12 +2,11 @@ import { BaseScene } from "./BaseScene.js";
 import { FARM_SPOTS } from "../ActionSystem.js";
 import { TILE_SIZE } from "../assets/manifest.js";
 
-const GRASS_SOLID = 12; // solid grass center tile in grass.png
 
 export class FarmScene extends BaseScene {
   constructor() { super("farm"); }
   create() {
-    this.paintGround("grass", GRASS_SOLID, "#5fa83c");
+    this.cameras.main.setBackgroundColor("#5fa83c");
     this.registerAnimations();
 
     const px = (t: number) => t * TILE_SIZE;

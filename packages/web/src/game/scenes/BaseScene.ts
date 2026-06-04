@@ -5,7 +5,26 @@ import { useStore } from "../../store/store.js";
 import { workstationFor, type ActionSpot } from "../ActionSystem.js";
 import type { Environment } from "@talesauce/shared";
 
-/** Shared loading + tile painting helpers. */
+export interface TilemapLayerSpec {
+  tilesetKey: string;
+  /** Row-major 2D array of frame indices. Use -1 to skip a tile. */
+  data: number[][];
+  depth: number;
+}
+
+/** Create a 2D grid filled with `fill` (default -1 = empty). */
+export function emptyGrid(rows: number, cols: number, fill = -1): number[][] {
+  return Array.from({ length: rows }, () => new Array(cols).fill(fill));
+}
+
+/** Fill a rectangular region of `grid` with `frame`. Mutates in place. */
+export function fillRect(grid: number[][], startRow: number, startCol: number, h: number, w: number, frame: number): void {
+  for (let r = startRow; r < startRow + h && r < grid.length; r++)
+    for (let c = startCol; c < startCol + w && c < grid[0].length; c++)
+      grid[r][c] = frame;
+}
+
+/** Shared loading + tilemap helpers. */
 export abstract class BaseScene extends Phaser.Scene {
   protected agents = new Map<string, AgentSprite>();
   private unsubscribe?: () => void;
@@ -17,59 +36,143 @@ export abstract class BaseScene extends Phaser.Scene {
     this.load.on("loaderror", (file: any) => console.warn("asset failed:", file?.key));
   }
 
-  /** Fill the scene with one tile (depth -100). Uses a large fixed coverage so it works
-   *  regardless of the canvas size at create() time under Scale.RESIZE. */
-  protected paintGround(key: string, frame = 0, bgColor = "#000000") {
-    this.cameras.main.setBackgroundColor(bgColor);
-    if (!this.textures.exists(key)) return;
-    const COVER = 4096;
-    this.add.tileSprite(0, 0, COVER, COVER, key, frame).setOrigin(0, 0).setDepth(-100);
-  }
-
-  /** Scatter a tile at random spots for ground texture (depth -90). */
-  protected scatter(key: string, frame: number, count: number) {
-    if (!this.textures.exists(key)) return;
-    for (let i = 0; i < count; i++) {
-      const x = Phaser.Math.Between(0, this.scale.width);
-      const y = Phaser.Math.Between(0, this.scale.height);
-      this.add.image(x, y, key, frame).setDepth(-90);
+  /**
+   * Stamp multiple tile layers onto the scene.
+   * Each layer is a 2D array of spritesheet frame indices (-1 = skip).
+   * Tiles are placed at (col * TILE_SIZE, row * TILE_SIZE) with origin (0,0).
+   */
+  protected buildTilemap(layers: TilemapLayerSpec[]): void {
+    for (const layer of layers) {
+      if (!this.textures.exists(layer.tilesetKey)) continue;
+      layer.data.forEach((row, r) => {
+        row.forEach((frame, c) => {
+          if (frame < 0) return;
+          this.add.image(c * TILE_SIZE, r * TILE_SIZE, layer.tilesetKey, frame)
+            .setOrigin(0, 0)
+            .setDepth(layer.depth);
+        });
+      });
     }
   }
 
-  /** Place a whole image prop at a tile coordinate (origin bottom-center), scaled. */
-  protected placeImage(key: string, tileX: number, tileY: number, scale = 1, depth = 0) {
+  /** Place a single spritesheet frame at a tile coordinate (origin top-left). */
+  protected placeSprite(key: string, frame: number, tileX: number, tileY: number, depth: number, scale = 1): void {
     if (!this.textures.exists(key)) return;
-    this.add.image(tileX * TILE_SIZE, tileY * TILE_SIZE, key).setOrigin(0.5, 1).setScale(scale).setDepth(depth);
+    this.add.image(tileX * TILE_SIZE, tileY * TILE_SIZE, key, frame)
+      .setOrigin(0, 0)
+      .setScale(scale)
+      .setDepth(depth);
   }
 
-  protected registerAnimations() {
-    const def = (key: string, start: number, end: number, rate = 6, repeat = -1) => {
+  /** Place a whole-image prop at a tile coordinate (origin bottom-center). */
+  protected placeImage(key: string, tileX: number, tileY: number, scale = 1, depth = 0): void {
+    if (!this.textures.exists(key)) return;
+    this.add.image(tileX * TILE_SIZE, tileY * TILE_SIZE, key)
+      .setOrigin(0.5, 1)
+      .setScale(scale)
+      .setDepth(depth);
+  }
+
+  /**
+   * Place a looping animated water sprite over a tile area.
+   * Creates "water-loop" animation from frames 0-3 of the "water" spritesheet.
+   * Draws one animated sprite per tile in the rectangle.
+   */
+  protected waterAnim(tileX: number, tileY: number, w: number, h: number, depth: number): void {
+    if (!this.textures.exists("water")) return;
+    if (!this.anims.exists("water-loop")) {
+      this.anims.create({
+        key: "water-loop",
+        frames: this.anims.generateFrameNumbers("water", { start: 0, end: 3 }),
+        frameRate: 4,
+        repeat: -1,
+      });
+    }
+    for (let r = 0; r < h; r++) {
+      for (let c = 0; c < w; c++) {
+        this.add.sprite((tileX + c) * TILE_SIZE, (tileY + r) * TILE_SIZE, "water", 0)
+          .setOrigin(0, 0)
+          .setDepth(depth)
+          .play("water-loop");
+      }
+    }
+  }
+
+  /**
+   * DEBUG ONLY — dumps all frames of a tileset on screen with index labels.
+   * Call temporarily in create(), verify indices, then REMOVE before committing.
+   * Usage: this.debugTileset("grass", 0, 0);
+   */
+  protected debugTileset(key: string, offsetX = 0, offsetY = 0): void {
+    if (!this.textures.exists(key)) return;
+    const tex = this.textures.get(key);
+    const frames = tex.getFrameNames().map(Number).filter((n) => !isNaN(n)).sort((a, b) => a - b);
+    const cols = Math.round(tex.source[0].width / 16);
+    frames.forEach((f) => {
+      const col = f % cols, row = Math.floor(f / cols);
+      this.add.image(offsetX + col * 18, offsetY + row * 18, key, f).setOrigin(0, 0).setDepth(500);
+      this.add.text(offsetX + col * 18 + 1, offsetY + row * 18 + 1, String(f), { fontSize: "5px", color: "#ff0" }).setDepth(501);
+    });
+  }
+
+  protected registerAnimations(): void {
+    const charDef = (key: string, start: number, end: number, rate = 6, repeat = -1) => {
       if (this.anims.exists(key)) return;
       this.anims.create({ key, frames: this.anims.generateFrameNumbers("char", { start, end }), frameRate: rate, repeat });
     };
-    // Sprout Lands basic character sheet: 4×4 grid of front-facing bounce frames.
-    // Row 0 (0–3) reads as an idle/walk bounce; we reuse it across states for Phase 1.
-    def("idle", 0, 1, 2);
-    def("walk-down", 0, 3, 6);
-    def("work-loop", 0, 3, 9);
-    def("wave", 12, 15, 5);
-    def("talk", 8, 11, 4);
+    const actDef = (key: string, start: number, end: number, rate = 6, repeat = -1) => {
+      if (this.anims.exists(key)) return;
+      this.anims.create({ key, frames: this.anims.generateFrameNumbers("actions", { start, end }), frameRate: rate, repeat });
+    };
+
+    // From sprout_char.png (4×4 grid = 16 frames)
+    charDef("idle",       0,  1, 2);
+    charDef("walk-down",  0,  3, 6);
+    charDef("work-loop",  0,  3, 9);
+    charDef("wave",      12, 15, 5);
+    charDef("talk",       8, 11, 4);
+
+    // From sprout_actions.png (2×12 grid = 24 frames at 48×48).
+    // FRAME INDEX DISCOVERY: Run the game, call this.debugTileset("actions", 0, 0) in
+    // FarmScene.create(), and look at the overlay to identify which frame ranges correspond
+    // to which actions. Then fill in the correct ranges below and remove the debug call.
+    //
+    // Expected layout (2 frames per row, 12 rows = 24 frames total):
+    //   Row 0  → frames  0-1  (likely: farming/watering)
+    //   Row 1  → frames  2-3  (likely: typing)
+    //   Row 2  → frames  4-5  (likely: swim/wave)
+    //   Row 3  → frames  6-7  (likely: sitting)
+    //   Row 4  → frames  8-9  (likely: sleeping)
+    //   Row 5  → frames 10-11 (likely: pointing/gesturing)
+    //   Row 6  → frames 12-13 (likely: drinking)
+    //
+    // Update the ranges below after visual inspection:
+    actDef("farm-work",  0,  1, 4);
+    actDef("type-work",  2,  3, 8);
+    actDef("swim-idle",  4,  5, 4);
+    actDef("sit-idle",   6,  7, 3);
+    actDef("sleep-idle", 8,  9, 2);
+    actDef("point-idle", 10, 11, 4);
+    actDef("drink-idle", 12, 13, 4);
   }
 
-  protected spawnAgents(env: Environment, spots: ActionSpot[], frontPoint: { x: number; y: number }) {
+  protected spawnAgents(env: Environment, spots: ActionSpot[], frontPoint: { x: number; y: number }): void {
     const stationTile = workstationFor(spots).tile;
-    const workstation = { x: stationTile.x * TILE_SIZE, y: stationTile.y * TILE_SIZE }; // tile → pixel
+    const workstation = { x: stationTile.x * TILE_SIZE, y: stationTile.y * TILE_SIZE };
     const render = () => {
       const all = useStore.getState().agents;
       for (const rt of Object.values(all)) {
         if (rt.config.environment !== env) continue;
         let s = this.agents.get(rt.config.id);
-        if (!s) { s = new AgentSprite(this, { x: rt.config.pos.x, y: rt.config.pos.y, name: rt.config.name }); this.agents.set(rt.config.id, s); }
+        if (!s) {
+          s = new AgentSprite(this, { x: rt.config.pos.x, y: rt.config.pos.y, name: rt.config.name, id: rt.config.id });
+          this.agents.set(rt.config.id, s);
+        }
         s.applyState(rt.state, frontPoint, workstation);
       }
     };
     render();
-    this.unsubscribe = useStore.subscribe(render); // re-render agents whenever store state changes
+    this.unsubscribe = useStore.subscribe(render);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.unsubscribe?.());
     this.events.once(Phaser.Scenes.Events.DESTROY, () => this.unsubscribe?.());
   }
