@@ -20,11 +20,12 @@ export class SoundSystem {
   private currentEnv?: "farm" | "office";
   private _muted: boolean;
   private playing = new Set<SfxKey>();
+  private unsubscribeMute: () => void;
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
     this._muted = muteStore.muted;
-    muteStore.subscribe((muted) => {
+    this.unsubscribeMute = muteStore.subscribe((muted) => {
       this._muted = muted;
       if (muted) {
         (this.ambient as any)?.pause?.();
@@ -32,6 +33,17 @@ export class SoundSystem {
         (this.ambient as any)?.resume?.();
       }
     });
+    // Detach from muteStore when the scene tears down, so destroyed
+    // SoundSystems aren't retained in the global listener set.
+    scene.events.once("shutdown", () => this.destroy());
+    scene.events.once("destroy", () => this.destroy());
+  }
+
+  /** Unsubscribe from the mute store and stop ambient. Idempotent. */
+  destroy(): void {
+    this.unsubscribeMute();
+    this.unsubscribeMute = () => {};
+    this.stopAmbient();
   }
 
   get muted(): boolean { return this._muted; }

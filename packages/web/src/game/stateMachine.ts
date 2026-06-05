@@ -16,7 +16,7 @@ export function nextSpriteIntent(state: AgentVisualState): SpriteIntent {
     case "working":
       return { move: "workstation", anim: "work-loop", bubble: "thinking" };
     case "walking-to-front":
-      return { move: "front", anim: "walk", bubble: "thinking" };
+      return { move: "front", anim: "walk-down", bubble: "thinking" };
     case "awaiting-permission":
       return { move: "front", anim: "wave", bubble: "permission" };
     case "awaiting-user":
