@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useStore } from "../store/store.js";
 import { muteStore } from "../game/muteStore.js";
 
+const PULSE_KEYFRAMES = `@keyframes pulseGreen { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }`;
+
 export function TopBar({ wsOk, onAdd }: { wsOk: boolean; onAdd: () => void }) {
   const count = Object.keys(useStore((s) => s.agents)).length;
   const [muted, setMuted] = useState(muteStore.muted);
@@ -13,6 +15,7 @@ export function TopBar({ wsOk, onAdd }: { wsOk: boolean; onAdd: () => void }) {
       display: "flex", alignItems: "center", gap: 12,
       padding: "8px 12px", background: "#241a14", color: "#fff", fontFamily: "monospace",
     }}>
+      <style>{PULSE_KEYFRAMES}</style>
       <strong style={{ fontSize: 15, letterSpacing: 1 }}>TaleSauce</strong>
       <button onClick={onAdd} disabled={count >= 6}>+ Add agent ({count}/6)</button>
       <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 10 }}>
@@ -28,6 +31,7 @@ export function TopBar({ wsOk, onAdd }: { wsOk: boolean; onAdd: () => void }) {
             width: 8, height: 8, borderRadius: "50%",
             background: wsOk ? "#4ade80" : "#6b7280",
             display: "inline-block",
+            animation: wsOk ? "pulseGreen 2s ease-in-out infinite" : "none",
           }} />
           <span style={{ fontSize: 11, opacity: 0.7 }}>{wsOk ? "live" : "reconnecting…"}</span>
         </span>
