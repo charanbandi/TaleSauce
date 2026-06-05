@@ -1,44 +1,45 @@
-import { BaseScene, emptyGrid } from "./BaseScene.js";
+import Phaser from "phaser";
+import { BaseScene } from "./BaseScene.js";
 import { OFFICE_SPOTS } from "../ActionSystem.js";
 import { TILE_SIZE } from "../assets/manifest.js";
+import { renderOffice } from "../officeArt.js";
 
-const MAP_W = 24, MAP_H = 16;
-
-// LimeZu Modern Interiors (free). room_builder = 17-wide sheet; interiors = 16-wide sheet.
-const FLOOR = 133;      // room_builder clean grey office-tile floor (seamless)
-const SOFA = 724;       // interiors: 3×2 couch
-const BOOKSHELF = 736;  // interiors: 2×3 bookshelf/cabinet
-const PLANT_A = 848;    // interiors: 1×1 potted leafy plant
-const PLANT_B = 849;    // interiors: 1×1 potted leafy plant (variant)
-const LAMP = 816;       // interiors: 1×2 floor lamp
-const PROP = 2;         // furniture scale, matches the 2× agents
+const TEX_KEY = "office-bg";
 
 export class OfficeScene extends BaseScene {
+  private tick = 0;
+  private bgCanvas?: HTMLCanvasElement;
+
   constructor() { super("office"); }
 
   create() {
-    this.cameras.main.setBackgroundColor("#8a8d94");
     this.registerAnimations();
+    this.cameras.main.setBackgroundColor("#c9cdd3"); // floor tone, fills any gap
 
-    const cols = Math.max(MAP_W, Math.ceil(this.scale.width / TILE_SIZE) + 1);
-    const rows = Math.max(MAP_H, Math.ceil(this.scale.height / TILE_SIZE) + 1);
-    const floor = emptyGrid(rows, cols, FLOOR);
-    this.buildTilemap([{ tilesetKey: "room", data: floor, depth: -100 }]);
+    const W = Math.max(640, Math.floor(this.scale.width));
+    const H = Math.max(480, Math.floor(this.scale.height));
 
-    // Bookshelves along the top "wall"
-    this.placeObject("interiors", BOOKSHELF, 2, 3, 2,  0, -50, PROP);
-    this.placeObject("interiors", BOOKSHELF, 2, 3, 9,  0, -50, PROP);
-    this.placeObject("interiors", BOOKSHELF, 2, 3, 16, 0, -50, PROP);
+    // Offscreen canvas → Phaser CanvasTexture used as the office background.
+    const canvas = document.createElement("canvas");
+    canvas.width = W; canvas.height = H;
+    this.bgCanvas = canvas;
+    const ctx = canvas.getContext("2d")!;
+    renderOffice(ctx, W, H, 0);
 
-    // A lounge: sofa + floor lamp
-    this.placeObject("interiors", SOFA, 3, 2, 14, 9, -50, PROP);
-    this.placeObject("interiors", LAMP, 1, 2, 20, 9, -50, PROP);
+    if (this.textures.exists(TEX_KEY)) this.textures.remove(TEX_KEY);
+    this.textures.addCanvas(TEX_KEY, canvas);
+    this.add.image(0, 0, TEX_KEY).setOrigin(0, 0).setDepth(-100);
 
-    // Potted plants for warmth (corners + accents)
-    this.placeObject("interiors", PLANT_A, 1, 1, 1,  5,  -50, PROP);
-    this.placeObject("interiors", PLANT_B, 1, 1, 21, 6,  -50, PROP);
-    this.placeObject("interiors", PLANT_A, 1, 1, 1,  12, -50, PROP);
-    this.placeObject("interiors", PLANT_B, 1, 1, 12, 6,  -50, PROP);
+    // Re-render ~10fps so the monitor "code" animates.
+    this.time.addEvent({
+      delay: 100, loop: true, callback: () => {
+        if (!this.bgCanvas) return;
+        const c = this.bgCanvas.getContext("2d")!;
+        renderOffice(c, this.bgCanvas.width, this.bgCanvas.height, ++this.tick);
+        const tex = this.textures.get(TEX_KEY) as Phaser.Textures.CanvasTexture;
+        tex.refresh();
+      },
+    });
 
     const sfx = this.createSoundSystem("office");
     this.spawnAgents("office", OFFICE_SPOTS, { x: this.scale.width / 2, y: this.scale.height - TILE_SIZE }, sfx);
