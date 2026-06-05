@@ -32,10 +32,12 @@ export class OfficeScene extends BaseScene {
     this.cameras.main.setBackgroundColor("#2a3140");
     this.registerAnimations();
 
-    // ── Floor layer: checkerboard pattern ─────────────────────────────────
-    const floor = emptyGrid(MAP_H, MAP_W, C_FLOOR);
-    for (let r = 0; r < MAP_H; r++)
-      for (let c = 0; c < MAP_W; c++)
+    // ── Floor layer: checkerboard pattern, fills the whole viewport ───────
+    const cols = Math.max(MAP_W, Math.ceil(this.scale.width / TILE_SIZE) + 1);
+    const rows = Math.max(MAP_H, Math.ceil(this.scale.height / TILE_SIZE) + 1);
+    const floor = emptyGrid(rows, cols, C_FLOOR);
+    for (let r = 0; r < rows; r++)
+      for (let c = 0; c < cols; c++)
         if ((r + c) % 3 === 0) floor[r][c] = C_FLOOR_ALT;
 
     // ── Back wall (top 3 rows) ───────────────────────────────────────────

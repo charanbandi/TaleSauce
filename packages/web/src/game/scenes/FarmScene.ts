@@ -42,17 +42,18 @@ export class FarmScene extends BaseScene {
     this.cameras.main.setBackgroundColor("#4a7a2e");
     this.registerAnimations();
 
-    // ── Ground layer: grass fill with scattered variants ─────────────────
-    const ground = emptyGrid(MAP_H, MAP_W, G_SOLID);
-    // Scatter variants for visual richness
-    const variants: [number, number, number][] = [
-      [0, 5, G_LIGHT], [1, 18, G_DARK], [3, 9, G_LIGHT], [4, 20, G_FLOWER],
-      [5, 3, G_ROCK],  [6, 14, G_DARK], [7, 7, G_LIGHT], [8, 20, G_ROCK],
-      [9, 2, G_DARK],  [10, 17, G_LIGHT], [11, 11, G_FLOWER], [12, 4, G_DARK],
-      [13, 19, G_LIGHT], [14, 8, G_ROCK], [2, 22, G_LIGHT], [15, 15, G_DARK],
-    ];
-    for (const [r, c, f] of variants) {
-      if (r < MAP_H && c < MAP_W) ground[r][c] = f;
+    // ── Ground layer: grass fills the whole viewport (not just the content grid) ──
+    const cols = Math.max(MAP_W, Math.ceil(this.scale.width / TILE_SIZE) + 1);
+    const rows = Math.max(MAP_H, Math.ceil(this.scale.height / TILE_SIZE) + 1);
+    const ground = emptyGrid(rows, cols, G_SOLID);
+    // Scatter grass variants across the full field so the lower area isn't flat.
+    const variantFrames = [G_LIGHT, G_DARK, G_FLOWER, G_ROCK];
+    let seed = 1337;
+    const rand = () => (seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff;
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        if (rand() < 0.06) ground[r][c] = variantFrames[Math.floor(rand() * variantFrames.length)];
+      }
     }
 
     // ── Hills layer: top 2 rows ──────────────────────────────────────────
