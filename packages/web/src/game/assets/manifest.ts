@@ -19,6 +19,7 @@ export const TILESETS: SpriteSheetDef[] = [
   { key: "hills",     url: "/farm/hills.png",         frameWidth: 16, frameHeight: 16 },
   { key: "things",    url: "/farm/grass_things.png",  frameWidth: 16, frameHeight: 16 },
   { key: "furniture", url: "/farm/furniture.png",     frameWidth: 16, frameHeight: 16 },
+  { key: "plants",    url: "/farm/plants.png",         frameWidth: 16, frameHeight: 16 },
   // Office
   { key: "city",      url: "/office/city_packed.png", frameWidth: 16, frameHeight: 16 },
 ];
@@ -26,7 +27,6 @@ export const TILESETS: SpriteSheetDef[] = [
 /** Whole-image props placed directly (not sliced). */
 export const IMAGES: TilesetDef[] = [
   { key: "house",  url: "/farm/wooden_house.png" },
-  { key: "plants", url: "/farm/plants.png" },
 ];
 
 /**

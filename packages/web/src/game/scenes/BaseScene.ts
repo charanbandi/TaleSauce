@@ -105,15 +105,19 @@ export abstract class BaseScene extends Phaser.Scene {
    * Call temporarily in create(), verify indices, then REMOVE before committing.
    * Usage: this.debugTileset("grass", 0, 0);
    */
-  protected debugTileset(key: string, offsetX = 0, offsetY = 0): void {
+  protected debugTileset(key: string, startFrame = 0, endFrame = 9999): void {
     if (!this.textures.exists(key)) return;
     const tex = this.textures.get(key);
-    const frames = tex.getFrameNames().map(Number).filter((n) => !isNaN(n)).sort((a, b) => a - b);
-    const cols = Math.round(tex.source[0].width / 16);
-    frames.forEach((f) => {
-      const col = f % cols, row = Math.floor(f / cols);
-      this.add.image(offsetX + col * 18, offsetY + row * 18, key, f).setOrigin(0, 0).setDepth(500);
-      this.add.text(offsetX + col * 18 + 1, offsetY + row * 18 + 1, String(f), { fontSize: "5px", color: "#ff0" }).setDepth(501);
+    const frames = tex.getFrameNames().map(Number).filter((n) => !isNaN(n)).sort((a, b) => a - b)
+      .filter((f) => f >= startFrame && f <= endFrame);
+    const CELL = 40, PAD = 6; // big readable cells
+    const perRow = Math.max(1, Math.floor((this.scale.width - PAD) / CELL));
+    this.add.rectangle(0, 0, 4096, 4096, 0x101018).setOrigin(0, 0).setDepth(499);
+    frames.forEach((f, i) => {
+      const col = i % perRow, row = Math.floor(i / perRow);
+      const x = PAD + col * CELL, y = PAD + row * CELL;
+      this.add.image(x, y, key, f).setOrigin(0, 0).setScale(2).setDepth(500);
+      this.add.text(x, y + 32, String(f), { fontSize: "8px", color: "#ffec3d", backgroundColor: "#000" }).setDepth(501);
     });
   }
 
