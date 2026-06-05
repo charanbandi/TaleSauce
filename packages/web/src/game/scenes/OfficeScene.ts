@@ -1,48 +1,100 @@
-import { BaseScene } from "./BaseScene.js";
+import { BaseScene, emptyGrid, fillRect } from "./BaseScene.js";
 import { OFFICE_SPOTS } from "../ActionSystem.js";
 import { TILE_SIZE } from "../assets/manifest.js";
 
+const MAP_W = 24, MAP_H = 16;
+
+// ── Frame indices for city_packed.png (37×28 = 1036 frames) ──────────────────
+// Kenney Roguelike Modern City — adjust after visual inspection with debugTileset
+const C_FLOOR      =   0; // primary floor tile
+const C_FLOOR_ALT  =   1; // alternate floor (checkerboard)
+const C_WALL       =  37; // wall tile (row 1)
+const C_WALL_ALT   =  38; // alternate wall tile
+const C_WALL_BASE  =  74; // baseboard / lower wall (row 2)
+const C_WINDOW     = 111; // window frame (row 3)
+const C_DESK       = 148; // desk top
+const C_DESK_SIDE  = 149; // desk side/extension
+const C_CHAIR      = 185; // office chair
+const C_MONITOR    = 150; // computer monitor
+const C_SOFA_L     = 222; // sofa left half
+const C_SOFA_R     = 223; // sofa right half
+const C_COUNTER    = 186; // counter/cabinet
+const C_CARAFE     = 187; // coffee machine
+const C_PLANT      = 259; // potted plant
+const C_LAMP       = 260; // floor lamp
+const C_WHITEBOARD = 112; // whiteboard section
+const C_TABLE      = 224; // small side table
 
 export class OfficeScene extends BaseScene {
   constructor() { super("office"); }
+
   create() {
-    this.cameras.main.setBackgroundColor("#9aa0ac");
+    this.cameras.main.setBackgroundColor("#2a3140");
     this.registerAnimations();
 
-    const px = (t: number) => t * TILE_SIZE;
+    // ── Floor layer: checkerboard pattern ─────────────────────────────────
+    const floor = emptyGrid(MAP_H, MAP_W, C_FLOOR);
+    for (let r = 0; r < MAP_H; r++)
+      for (let c = 0; c < MAP_W; c++)
+        if ((r + c) % 3 === 0) floor[r][c] = C_FLOOR_ALT;
 
-    // Back wall strip with a baseboard, so the room reads as interior.
-    this.add.rectangle(0, 0, 4096, px(2.5), 0x3a4254).setOrigin(0, 0).setDepth(-80);
-    this.add.rectangle(0, px(2.5), 4096, px(0.4), 0x2a3140).setOrigin(0, 0).setDepth(-79);
+    // ── Back wall (top 3 rows) ───────────────────────────────────────────
+    const wall = emptyGrid(MAP_H, MAP_W, -1);
+    for (let c = 0; c < MAP_W; c++) {
+      wall[0][c] = C_WALL;
+      wall[1][c] = C_WALL_ALT;
+      wall[2][c] = C_WALL_BASE;
+    }
 
-    // Desks with monitors (the primary workstations) + a chair.
-    const desk = (tx: number, ty: number) => {
-      this.add.rectangle(px(tx), px(ty) + 8, px(1), px(0.6), 0x394150).setDepth(-46); // chair back
-      this.add.rectangle(px(tx), px(ty), px(2.4), px(1.2), 0x7a5638).setDepth(-44).setStrokeStyle(2, 0x533a24); // desk
-      this.add.rectangle(px(tx) - 8, px(ty) - 7, px(1.1), px(0.85), 0x1f2a3d).setDepth(-43).setStrokeStyle(2, 0x6fd0ff); // monitor
-      this.add.rectangle(px(tx) + 10, px(ty) - 2, px(0.5), px(0.4), 0x2b2b2b).setDepth(-43); // mini tower/keyboard
-    };
-    desk(6, 6);
-    desk(10, 6);
+    // ── Wall decorations (windows) ───────────────────────────────────────
+    const deco = emptyGrid(MAP_H, MAP_W, -1);
+    // 3 windows evenly spaced
+    deco[1][4]  = C_WINDOW; deco[1][5]  = C_WINDOW;
+    deco[1][12] = C_WINDOW; deco[1][13] = C_WINDOW;
+    deco[1][20] = C_WINDOW; deco[1][21] = C_WINDOW;
 
-    // Whiteboard.
-    this.add.rectangle(px(3), px(3), px(2.4), px(1.5), 0xf3f4f6).setDepth(-50).setStrokeStyle(3, 0x9aa0ac);
-    this.add.rectangle(px(2.6), px(2.8), px(1.2), px(0.12), 0x3b82f6).setDepth(-49);
-    this.add.rectangle(px(2.8), px(3.1), px(0.8), px(0.12), 0xef4444).setDepth(-49);
+    // ── Stamp layers ─────────────────────────────────────────────────────
+    this.buildTilemap([
+      { tilesetKey: "city", data: floor, depth: -100 },
+      { tilesetKey: "city", data: wall,  depth: -85  },
+      { tilesetKey: "city", data: deco,  depth: -80  },
+    ]);
 
-    // Coffee station.
-    this.add.rectangle(px(12), px(4), px(1.2), px(0.9), 0x4b5563).setDepth(-50);
-    this.add.rectangle(px(12), px(3.7), px(0.4), px(0.4), 0x111827).setDepth(-49); // carafe
-    this.add.circle(px(12.4), px(4.1), 2, 0xfca5a5).setDepth(-49); // on light
+    // ── Props ────────────────────────────────────────────────────────────
 
-    // Couch (chill spot).
-    this.add.rectangle(px(14), px(9), px(2.6), px(1.1), 0x3f6f5f).setDepth(-50).setStrokeStyle(2, 0x2c4f43);
-    this.add.rectangle(px(14), px(8.7), px(2.6), px(0.4), 0x4d8473).setDepth(-49); // backrest
+    // Desk 1 (left workstation) — chair, desk surface, monitor
+    this.placeSprite("city", C_CHAIR,   6,  7, -48);
+    this.placeSprite("city", C_DESK,    6,  6, -46);
+    this.placeSprite("city", C_DESK_SIDE, 7, 6, -46);
+    this.placeSprite("city", C_MONITOR, 6,  5, -44);
 
-    // A potted plant for life.
-    this.add.rectangle(px(18), px(3), px(0.5), px(0.5), 0x8b5a2b).setDepth(-50);
-    this.add.circle(px(18.25), px(2.7), 7, 0x4b8b5a).setDepth(-49);
+    // Desk 2 (right workstation)
+    this.placeSprite("city", C_CHAIR,     11, 7, -48);
+    this.placeSprite("city", C_DESK,      11, 6, -46);
+    this.placeSprite("city", C_DESK_SIDE, 12, 6, -46);
+    this.placeSprite("city", C_MONITOR,   11, 5, -44);
 
+    // Whiteboard on back wall (left area)
+    this.placeSprite("city", C_WHITEBOARD, 2, 3, -79);
+    this.placeSprite("city", C_WHITEBOARD, 3, 3, -79);
+
+    // Coffee station (right side)
+    this.placeSprite("city", C_COUNTER, 18, 4, -50);
+    this.placeSprite("city", C_CARAFE,  19, 4, -50);
+
+    // Couch (bottom-right) + small table
+    this.placeSprite("city", C_SOFA_L, 20, 9, -50);
+    this.placeSprite("city", C_SOFA_R, 21, 9, -50);
+    this.placeSprite("city", C_TABLE,  19, 9, -50);
+
+    // Potted plants (corners)
+    this.placeSprite("city", C_PLANT, 1,  8, -48);
+    this.placeSprite("city", C_PLANT, 22, 3, -48);
+
+    // Floor lamp near couch
+    this.placeSprite("city", C_LAMP, 22, 8, -48);
+
+    // Spawn agents
     this.spawnAgents("office", OFFICE_SPOTS, { x: this.scale.width / 2, y: this.scale.height - TILE_SIZE });
   }
 }
