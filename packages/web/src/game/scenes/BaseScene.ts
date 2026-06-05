@@ -1,9 +1,10 @@
 import Phaser from "phaser";
-import { TILESETS, IMAGES, CHARACTERS, TILE_SIZE } from "../assets/manifest.js";
+import { TILESETS, IMAGES, CHARACTERS, TILE_SIZE, AUDIO } from "../assets/manifest.js";
 import { AgentSprite } from "../AgentSprite.js";
 import { useStore } from "../../store/store.js";
 import { workstationFor, type ActionSpot } from "../ActionSystem.js";
-import type { Environment } from "@talesauce/shared";
+import type { Environment, AgentVisualState } from "@talesauce/shared";
+import { SoundSystem, type SfxKey } from "../SoundSystem.js";
 
 export interface TilemapLayerSpec {
   tilesetKey: string;
@@ -33,6 +34,7 @@ export abstract class BaseScene extends Phaser.Scene {
     for (const t of TILESETS) this.load.spritesheet(t.key, t.url, { frameWidth: t.frameWidth, frameHeight: t.frameHeight });
     for (const i of IMAGES) this.load.image(i.key, i.url);
     for (const c of CHARACTERS) this.load.spritesheet(c.key, c.url, { frameWidth: c.frameWidth, frameHeight: c.frameHeight });
+    for (const a of AUDIO) this.load.audio(a.key, a.url);
     this.load.on("loaderror", (file: any) => console.warn("asset failed:", file?.key));
   }
 
@@ -156,13 +158,42 @@ export abstract class BaseScene extends Phaser.Scene {
     actDef("drink-idle", 12, 13, 4);
   }
 
-  protected spawnAgents(env: Environment, spots: ActionSpot[], frontPoint: { x: number; y: number }): void {
+  protected createSoundSystem(env: "farm" | "office"): SoundSystem {
+    const sys = new SoundSystem(this);
+    sys.startAmbient(env);
+    return sys;
+  }
+
+  protected spawnAgents(
+    env: Environment,
+    spots: ActionSpot[],
+    frontPoint: { x: number; y: number },
+    sfx?: SoundSystem,
+  ): void {
     const stationTile = workstationFor(spots).tile;
     const workstation = { x: stationTile.x * TILE_SIZE, y: stationTile.y * TILE_SIZE };
+    const prevStates = new Map<string, AgentVisualState>();
+    const SFX_MAP: Partial<Record<AgentVisualState, SfxKey>> = {
+      "working":             "task-start",
+      "awaiting-user":       "question",
+      "reporting":           "done",
+      "error":               "error",
+      "awaiting-permission": "permission",
+    };
     const render = () => {
       const all = useStore.getState().agents;
       for (const rt of Object.values(all)) {
         if (rt.config.environment !== env) continue;
+        const prev = prevStates.get(rt.config.id);
+        if (prev !== rt.state) {
+          prevStates.set(rt.config.id, rt.state);
+          if (prev === "awaiting-permission" && rt.state === "working") {
+            sfx?.play("permission-resolve");
+          } else {
+            const sfxKey = SFX_MAP[rt.state];
+            if (sfxKey) sfx?.play(sfxKey);
+          }
+        }
         let s = this.agents.get(rt.config.id);
         if (!s) {
           s = new AgentSprite(this, { x: rt.config.pos.x, y: rt.config.pos.y, name: rt.config.name, id: rt.config.id });

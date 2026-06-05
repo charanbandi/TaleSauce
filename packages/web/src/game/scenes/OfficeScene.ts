@@ -95,6 +95,7 @@ export class OfficeScene extends BaseScene {
     this.placeSprite("city", C_LAMP, 22, 8, -48);
 
     // Spawn agents
-    this.spawnAgents("office", OFFICE_SPOTS, { x: this.scale.width / 2, y: this.scale.height - TILE_SIZE });
+    const sfx = this.createSoundSystem("office");
+    this.spawnAgents("office", OFFICE_SPOTS, { x: this.scale.width / 2, y: this.scale.height - TILE_SIZE }, sfx);
   }
 }

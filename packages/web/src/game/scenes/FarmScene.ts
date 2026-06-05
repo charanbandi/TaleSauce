@@ -126,6 +126,7 @@ export class FarmScene extends BaseScene {
     }
 
     // Spawn agents
-    this.spawnAgents("farm", FARM_SPOTS, { x: this.scale.width / 2, y: this.scale.height - TILE_SIZE });
+    const sfx = this.createSoundSystem("farm");
+    this.spawnAgents("farm", FARM_SPOTS, { x: this.scale.width / 2, y: this.scale.height - TILE_SIZE }, sfx);
   }
 }
