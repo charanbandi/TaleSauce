@@ -38,6 +38,7 @@ comes from the sources below. Please respect each pack's terms.
 Used for: UI sound effects (task start, question, done, error, permission prompts).
 License: CC0 1.0 Universal (Public Domain). No attribution required; credited here regardless.
 
-**Kenney Ambient Sounds** — https://kenney.nl/assets/ambient-sounds
-Used for: environment ambient loops (farm, office).
-License: CC0 1.0 Universal (Public Domain). No attribution required; credited here regardless.
+**Pixabay** — https://pixabay.com/sound-effects/
+Used for: environment ambient loops (farm, office) — `ambient-farm.mp3`, `ambient-office.mp3`.
+License: Pixabay Content License (free for commercial use, no attribution required). The specific
+clips are chosen by whoever sets up the repo (see `assets/audio/README.md`); credited here regardless.
