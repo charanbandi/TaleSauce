@@ -44,3 +44,15 @@ export const ANIMATIONS = [
   "idle", "walk-down", "work-loop", "wave", "talk",
   "farm-work", "type-work", "sit-idle", "sleep-idle", "drink-idle", "point-idle", "swim-idle",
 ] as const;
+
+/** Audio assets: ambient loops and sound effects. */
+export const AUDIO: { key: string; url: string; loop?: boolean }[] = [
+  { key: "ambient-farm",           url: "/audio/ambient-farm.ogg",           loop: true },
+  { key: "ambient-office",         url: "/audio/ambient-office.ogg",         loop: true },
+  { key: "sfx-task-start",         url: "/audio/sfx-task-start.ogg"                     },
+  { key: "sfx-question",           url: "/audio/sfx-question.ogg"                       },
+  { key: "sfx-done",               url: "/audio/sfx-done.ogg"                           },
+  { key: "sfx-error",              url: "/audio/sfx-error.ogg"                          },
+  { key: "sfx-permission",         url: "/audio/sfx-permission.ogg"                     },
+  { key: "sfx-permission-resolve", url: "/audio/sfx-permission-resolve.ogg"             },
+];
