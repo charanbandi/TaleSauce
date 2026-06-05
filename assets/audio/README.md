@@ -18,13 +18,14 @@ To swap any for a different taste, copy another file from the Kenney pack over i
 
 ## Ambient loops — ✅ already added (Pixabay, free for commercial use)
 
-- `ambient-farm.mp3` — tropical jungle birds, by Iris/Helen/silvy (`placidplace` on Pixabay)
+- `ambient-farm.m4a` — tropical jungle birds, by Iris/Helen/silvy (`placidplace` on Pixabay)
 - `ambient-office.mp3` — office ambience, by `freesound_community` on Pixabay
 
-To swap either, save a different `.mp3` over it with the same filename and reload. The manifest
-(`packages/web/src/game/assets/manifest.ts`, the `AUDIO` array) points the two ambient entries at
-`.mp3`. The `SoundSystem` checks each clip exists before playing, so a missing file never breaks anything.
+To swap either, save a new file over it with the same name and reload. The manifest
+(`packages/web/src/game/assets/manifest.ts`, the `AUDIO` array) points `ambient-farm` at `.m4a`
+and `ambient-office` at `.mp3` — match the extension or update the URL there. The `SoundSystem`
+checks each clip exists before playing, so a missing file never breaks anything.
 
-> Note: `ambient-farm.mp3` is ~18 MB (256 kbps). If repo size matters, re-encode it lower
-> (e.g. `ffmpeg -i ambient-farm.mp3 -b:a 96k -ac 1 out.mp3` → ~3 MB) — quality stays fine for a
-> background loop.
+> Note: `ambient-farm.m4a` was re-encoded to 64 kbps mono (~4.9 MB, down from ~19 MB) with the
+> built-in `afconvert -f m4af -d aac -b 64000 -c 1 in.mp3 out.m4a` — quality is fine for a
+> background loop. Re-encode lower if repo size matters more.

@@ -47,7 +47,7 @@ export const ANIMATIONS = [
 
 /** Audio assets: ambient loops and sound effects. */
 export const AUDIO: { key: string; url: string; loop?: boolean }[] = [
-  { key: "ambient-farm",           url: "/audio/ambient-farm.mp3",           loop: true },
+  { key: "ambient-farm",           url: "/audio/ambient-farm.m4a",           loop: true },
   { key: "ambient-office",         url: "/audio/ambient-office.mp3",         loop: true },
   { key: "sfx-task-start",         url: "/audio/sfx-task-start.ogg"                     },
   { key: "sfx-question",           url: "/audio/sfx-question.ogg"                       },
