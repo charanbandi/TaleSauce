@@ -71,14 +71,16 @@ export abstract class BaseScene extends Phaser.Scene {
    * `topLeftFrame` is the object's top-left tile; w×h are its tile dimensions.
    * Frames are taken row-major using the sheet's native column count.
    */
-  protected placeObject(key: string, topLeftFrame: number, w: number, h: number, tileX: number, tileY: number, depth: number): void {
+  protected placeObject(key: string, topLeftFrame: number, w: number, h: number, tileX: number, tileY: number, depth: number, scale = 1): void {
     if (!this.textures.exists(key)) return;
     const sheetCols = Math.round(this.textures.get(key).source[0].width / 16);
+    const step = TILE_SIZE * scale;
+    const baseX = tileX * TILE_SIZE, baseY = tileY * TILE_SIZE;
     for (let r = 0; r < h; r++) {
       for (let c = 0; c < w; c++) {
         const frame = topLeftFrame + r * sheetCols + c;
-        this.add.image((tileX + c) * TILE_SIZE, (tileY + r) * TILE_SIZE, key, frame)
-          .setOrigin(0, 0).setDepth(depth);
+        this.add.image(baseX + c * step, baseY + r * step, key, frame)
+          .setOrigin(0, 0).setScale(scale).setDepth(depth);
       }
     }
   }
