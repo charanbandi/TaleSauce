@@ -31,3 +31,13 @@ comes from the sources below. Please respect each pack's terms.
   to this project and released as CC0. They are a fallback; the app uses the
   Sprout Lands / Kenney art above by default (see
   `packages/web/src/game/assets/manifest.ts`).
+
+## Audio
+
+**Kenney Interface Sounds** — https://kenney.nl/assets/interface-sounds
+Used for: UI sound effects (task start, question, done, error, permission prompts).
+License: CC0 1.0 Universal (Public Domain). No attribution required; credited here regardless.
+
+**Kenney Ambient Sounds** — https://kenney.nl/assets/ambient-sounds
+Used for: environment ambient loops (farm, office).
+License: CC0 1.0 Universal (Public Domain). No attribution required; credited here regardless.
