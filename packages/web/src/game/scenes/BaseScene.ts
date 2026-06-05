@@ -193,6 +193,7 @@ export abstract class BaseScene extends Phaser.Scene {
     spots: ActionSpot[],
     frontPoint: { x: number; y: number },
     sfx?: SoundSystem,
+    seats?: { x: number; y: number }[],
   ): void {
     const stationTile = workstationFor(spots).tile;
     const workstation = { x: stationTile.x * TILE_SIZE, y: stationTile.y * TILE_SIZE };
@@ -204,8 +205,10 @@ export abstract class BaseScene extends Phaser.Scene {
       "error":               "error",
       "awaiting-permission": "permission",
     };
+    const seatFor = new Map<string, { x: number; y: number }>();
     const render = () => {
       const all = useStore.getState().agents;
+      let seatIdx = 0;
       for (const rt of Object.values(all)) {
         if (rt.config.environment !== env) continue;
         const prev = prevStates.get(rt.config.id);
@@ -218,12 +221,18 @@ export abstract class BaseScene extends Phaser.Scene {
             if (sfxKey) sfx?.play(sfxKey);
           }
         }
+        // Assign each agent a stable desk seat (office) so they sit at desks.
+        if (seats && seats.length && !seatFor.has(rt.config.id)) {
+          seatFor.set(rt.config.id, seats[seatIdx % seats.length]);
+        }
+        seatIdx++;
+        const home = seatFor.get(rt.config.id);
         let s = this.agents.get(rt.config.id);
         if (!s) {
-          s = new AgentSprite(this, { x: rt.config.pos.x, y: rt.config.pos.y, name: rt.config.name, id: rt.config.id });
+          s = new AgentSprite(this, { x: rt.config.pos.x, y: rt.config.pos.y, name: rt.config.name, id: rt.config.id, homePx: home });
           this.agents.set(rt.config.id, s);
         }
-        s.applyState(rt.state, frontPoint, workstation);
+        s.applyState(rt.state, frontPoint, home ?? workstation);
       }
     };
     render();

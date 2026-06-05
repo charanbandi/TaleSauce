@@ -3,7 +3,7 @@ import { TILE_SIZE } from "./assets/manifest.js";
 import { nextSpriteIntent, type SpriteIntent } from "./stateMachine.js";
 import type { AgentVisualState } from "@talesauce/shared";
 
-export interface AgentSpriteOpts { x: number; y: number; name: string; id?: string; }
+export interface AgentSpriteOpts { x: number; y: number; name: string; id?: string; homePx?: { x: number; y: number }; }
 
 const SPRITE_SCALE = 2;
 
@@ -31,9 +31,12 @@ export class AgentSprite {
   private bubble: Phaser.GameObjects.Text;
   private tween?: Phaser.Tweens.Tween;
   private currentAnim = "";
+  private home?: { x: number; y: number };
 
   constructor(private scene: Phaser.Scene, opts: AgentSpriteOpts) {
-    const px = opts.x * TILE_SIZE, py = opts.y * TILE_SIZE;
+    this.home = opts.homePx;
+    const px = opts.homePx ? opts.homePx.x : opts.x * TILE_SIZE;
+    const py = opts.homePx ? opts.homePx.y : opts.y * TILE_SIZE;
 
     // Shadow ellipse just under the sprite's feet
     this.shadow = scene.add.ellipse(px, py + 2, 16, 5, 0x000000, 0.18);
@@ -69,10 +72,15 @@ export class AgentSprite {
       this.currentAnim = intent.anim;
       this.sprite.play(intent.anim, true);
     }
+    // Agents with a home desk sit there when idle/working and only leave to walk to the front.
+    const deskOrStation = this.home ?? workstation;
+    const wander = this.home
+      ? { x: this.home.x + Phaser.Math.Between(-6, 6), y: this.home.y + Phaser.Math.Between(-4, 4) }
+      : { x: this.sprite.x + Phaser.Math.Between(-40, 40), y: this.sprite.y + Phaser.Math.Between(-24, 24) };
     const target =
       intent.move === "front"       ? frontPoint :
-      intent.move === "workstation" ? workstation :
-      { x: this.sprite.x + Phaser.Math.Between(-40, 40), y: this.sprite.y + Phaser.Math.Between(-24, 24) };
+      intent.move === "workstation" ? deskOrStation :
+      wander;
     this.moveTo(target.x, target.y);
     this.updateDepths();
   }

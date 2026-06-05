@@ -32,6 +32,14 @@ comes from the sources below. Please respect each pack's terms.
 - **License:** free version, usable in non-commercial and commercial projects with
   credit to LimeZu. (Consider buying the full pack to support the author.)
 
+## My Virtual Office (office rendering — code, MIT)
+
+- **By:** Virtual Office Contributors — https://myvirtualoffice.ai (MIT License)
+- **Used for:** the procedural office renderer (`packages/web/src/game/officeArt.ts`)
+  is adapted from this project's canvas furniture-drawing code (desks, kitchen,
+  lounge, plants, etc.). No image assets are copied; the office is drawn in code.
+- **License:** MIT — permits use/modification with the copyright notice retained.
+
 ## Placeholder art (fallback)
 
 - `assets/generate-placeholders.mjs` and the PNGs it produces

@@ -2,7 +2,7 @@ import Phaser from "phaser";
 import { BaseScene } from "./BaseScene.js";
 import { OFFICE_SPOTS } from "../ActionSystem.js";
 import { TILE_SIZE } from "../assets/manifest.js";
-import { renderOffice } from "../officeArt.js";
+import { renderOffice, OFFICE_DESKS } from "../officeArt.js";
 
 const TEX_KEY = "office-bg";
 
@@ -42,6 +42,7 @@ export class OfficeScene extends BaseScene {
     });
 
     const sfx = this.createSoundSystem("office");
-    this.spawnAgents("office", OFFICE_SPOTS, { x: this.scale.width / 2, y: this.scale.height - TILE_SIZE }, sfx);
+    // Seat agents at the desks (seat positions are in office-canvas = scene coords).
+    this.spawnAgents("office", OFFICE_SPOTS, { x: this.scale.width / 2, y: this.scale.height - TILE_SIZE }, sfx, [...OFFICE_DESKS]);
   }
 }
