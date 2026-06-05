@@ -16,23 +16,15 @@ https://kenney.nl/assets/interface-sounds
 
 To swap any for a different taste, copy another file from the Kenney pack over it (keep the name).
 
-## Ambient loops — ⬇️ you add these (2 files)
+## Ambient loops — ✅ already added (Pixabay, free for commercial use)
 
-Kenney no longer ships an ambient pack, so grab two looping background tracks from **Pixabay**
-(free, no account needed to download, license allows commercial use with no attribution):
+- `ambient-farm.mp3` — tropical jungle birds, by Iris/Helen/silvy (`placidplace` on Pixabay)
+- `ambient-office.mp3` — office ambience, by `freesound_community` on Pixabay
 
-1. **Farm:** https://pixabay.com/sound-effects/search/nature%20ambience/ — pick a calm
-   birds / countryside / morning loop. Save it here as **`ambient-farm.mp3`**.
-2. **Office:** https://pixabay.com/sound-effects/search/office%20ambience/ — pick a quiet
-   room-tone / office / keyboard-hum loop. Save it here as **`ambient-office.mp3`**.
+To swap either, save a different `.mp3` over it with the same filename and reload. The manifest
+(`packages/web/src/game/assets/manifest.ts`, the `AUDIO` array) points the two ambient entries at
+`.mp3`. The `SoundSystem` checks each clip exists before playing, so a missing file never breaks anything.
 
-Pixabay's download button gives `.mp3` — the manifest (`packages/web/src/game/assets/manifest.ts`,
-the `AUDIO` array) already points the two ambient entries at `.mp3`, so just drop the files in with
-those exact names and reload. Pick tracks that loop cleanly (most Pixabay "ambience" clips do).
-
-The app runs fine without the ambient files — sound just stays quieter (SFX only) until you add them.
-The `SoundSystem` checks each clip exists before playing, so missing ambient never breaks anything.
-
-> Alternative CC0 source if you prefer: https://freesound.org (filter to "Creative Commons 0").
-> Requires a free account; save the two loops with the same `ambient-farm.mp3` / `ambient-office.mp3`
-> names (convert to mp3 if needed).
+> Note: `ambient-farm.mp3` is ~18 MB (256 kbps). If repo size matters, re-encode it lower
+> (e.g. `ffmpeg -i ambient-farm.mp3 -b:a 96k -ac 1 out.mp3` → ~3 MB) — quality stays fine for a
+> background loop.

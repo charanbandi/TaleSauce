@@ -39,6 +39,10 @@ Used for: UI sound effects (task start, question, done, error, permission prompt
 License: CC0 1.0 Universal (Public Domain). No attribution required; credited here regardless.
 
 **Pixabay** — https://pixabay.com/sound-effects/
-Used for: environment ambient loops (farm, office) — `ambient-farm.mp3`, `ambient-office.mp3`.
-License: Pixabay Content License (free for commercial use, no attribution required). The specific
-clips are chosen by whoever sets up the repo (see `assets/audio/README.md`); credited here regardless.
+Used for: environment ambient loops (farm, office). License: Pixabay Content License (free for
+commercial use, no attribution required). Credited here regardless:
+
+- `ambient-farm.mp3` — "Nature Sounds / Tropical Jungle Birds" by **Iris, Helen, silvy**
+  (Pixabay user `placidplace`) — https://pixabay.com/users/placidplace-25572496/
+- `ambient-office.mp3` — "Office Ambience" by **freesound_community**
+  — https://pixabay.com/users/freesound_community-46691455/
