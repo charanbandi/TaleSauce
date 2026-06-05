@@ -24,6 +24,14 @@ comes from the sources below. Please respect each pack's terms.
 - **License:** Creative Commons Zero (CC0 1.0) — public domain, free for any
   use including commercial. Crediting Kenney is appreciated but not required.
 
+## LimeZu — Modern Interiors (office interior: floor + furniture)
+
+- **By:** LimeZu — https://limezu.itch.io/moderninteriors
+- **Used for:** the office floor and furniture (`assets/office/room_builder.png`,
+  `assets/office/interiors.png`) — the free version of the Modern Interiors pack.
+- **License:** free version, usable in non-commercial and commercial projects with
+  credit to LimeZu. (Consider buying the full pack to support the author.)
+
 ## Placeholder art (fallback)
 
 - `assets/generate-placeholders.mjs` and the PNGs it produces

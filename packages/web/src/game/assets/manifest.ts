@@ -20,8 +20,10 @@ export const TILESETS: SpriteSheetDef[] = [
   { key: "things",    url: "/farm/grass_things.png",  frameWidth: 16, frameHeight: 16 },
   { key: "furniture", url: "/farm/furniture.png",     frameWidth: 16, frameHeight: 16 },
   { key: "plants",    url: "/farm/plants.png",         frameWidth: 16, frameHeight: 16 },
-  // Office
-  { key: "city",      url: "/office/city_packed.png", frameWidth: 16, frameHeight: 16 },
+  // Office — LimeZu Modern Interiors (free)
+  { key: "city",      url: "/office/city_packed.png",  frameWidth: 16, frameHeight: 16 },
+  { key: "room",      url: "/office/room_builder.png", frameWidth: 16, frameHeight: 16 },
+  { key: "interiors", url: "/office/interiors.png",    frameWidth: 16, frameHeight: 16 },
 ];
 
 /** Whole-image props placed directly (not sliced). */

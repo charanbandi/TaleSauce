@@ -66,6 +66,23 @@ export abstract class BaseScene extends Phaser.Scene {
       .setDepth(depth);
   }
 
+  /**
+   * Stamp a multi-tile object from a packed spritesheet.
+   * `topLeftFrame` is the object's top-left tile; w×h are its tile dimensions.
+   * Frames are taken row-major using the sheet's native column count.
+   */
+  protected placeObject(key: string, topLeftFrame: number, w: number, h: number, tileX: number, tileY: number, depth: number): void {
+    if (!this.textures.exists(key)) return;
+    const sheetCols = Math.round(this.textures.get(key).source[0].width / 16);
+    for (let r = 0; r < h; r++) {
+      for (let c = 0; c < w; c++) {
+        const frame = topLeftFrame + r * sheetCols + c;
+        this.add.image((tileX + c) * TILE_SIZE, (tileY + r) * TILE_SIZE, key, frame)
+          .setOrigin(0, 0).setDepth(depth);
+      }
+    }
+  }
+
   /** Place a whole-image prop at a tile coordinate (origin bottom-center). */
   protected placeImage(key: string, tileX: number, tileY: number, scale = 1, depth = 0): void {
     if (!this.textures.exists(key)) return;
@@ -105,19 +122,20 @@ export abstract class BaseScene extends Phaser.Scene {
    * Call temporarily in create(), verify indices, then REMOVE before committing.
    * Usage: this.debugTileset("grass", 0, 0);
    */
-  protected debugTileset(key: string, startFrame = 0, endFrame = 9999): void {
+  protected debugTileset(key: string, startRow = 0, endRow = 9999, scale = 1.5): void {
     if (!this.textures.exists(key)) return;
     const tex = this.textures.get(key);
-    const frames = tex.getFrameNames().map(Number).filter((n) => !isNaN(n)).sort((a, b) => a - b)
-      .filter((f) => f >= startFrame && f <= endFrame);
-    const CELL = 40, PAD = 6; // big readable cells
-    const perRow = Math.max(1, Math.floor((this.scale.width - PAD) / CELL));
+    const sheetCols = Math.round(tex.source[0].width / 16);
+    const frames = tex.getFrameNames().map(Number).filter((n) => !isNaN(n)).sort((a, b) => a - b);
     this.add.rectangle(0, 0, 4096, 4096, 0x101018).setOrigin(0, 0).setDepth(499);
-    frames.forEach((f, i) => {
-      const col = i % perRow, row = Math.floor(i / perRow);
-      const x = PAD + col * CELL, y = PAD + row * CELL;
-      this.add.image(x, y, key, f).setOrigin(0, 0).setScale(2).setDepth(500);
-      this.add.text(x, y + 32, String(f), { fontSize: "8px", color: "#ffec3d", backgroundColor: "#000" }).setDepth(501);
+    const cell = 16 * scale;
+    frames.forEach((f) => {
+      const col = f % sheetCols, row = Math.floor(f / sheetCols);
+      if (row < startRow || row > endRow) return;
+      const x = col * cell, y = (row - startRow) * cell;
+      this.add.image(x, y, key, f).setOrigin(0, 0).setScale(scale).setDepth(500);
+      // label only the top-left of each tile, small
+      this.add.text(x, y, String(f), { fontSize: "6px", color: "#ffec3d" }).setDepth(501);
     });
   }
 
