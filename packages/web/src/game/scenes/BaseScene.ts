@@ -17,6 +17,13 @@ export abstract class BaseScene extends Phaser.Scene {
     this.load.on("loaderror", (file: any) => console.warn("asset failed:", file?.key));
   }
 
+  /** Re-home all agents to new seat positions (after a resize re-lays the scene). */
+  protected reseatAgents(seats: { x: number; y: number }[]): void {
+    if (!seats.length) return;
+    let i = 0;
+    for (const s of this.agents.values()) { s.setHome(seats[i % seats.length]); i++; }
+  }
+
   protected createSoundSystem(env: "farm" | "office"): SoundSystem {
     const sys = new SoundSystem(this);
     sys.startAmbient(env);

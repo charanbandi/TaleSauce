@@ -251,13 +251,14 @@ function stepAndDrawNpc(W: number, H: number, coffee: { x: number; y: number }, 
   }
 
   const phase = moving ? (Math.floor(tick / 4) % 2 === 0 ? 1 : 2) : 0;
-  C.save(); C.translate(n.x, n.y); if (n.flip) C.scale(-1, 1);
+  const S = 1.4; // match the 1.4× agent sprites
+  C.save(); C.translate(n.x, n.y); C.scale(n.flip ? -S : S, S);
   drawCharacter(C, 0, 0, NPC_PAL, phase);
   C.restore();
   if (n.state === "brew") { // steam
     C.fillStyle = "rgba(255,255,255,0.4)";
-    C.fillRect(n.x + 4, n.y - 40 + Math.sin(tick * 0.2) * 2, 2, 4);
-    C.fillRect(n.x + 8, n.y - 44 + Math.cos(tick * 0.2) * 2, 2, 4);
+    C.fillRect(n.x + 6, n.y - 58 + Math.sin(tick * 0.2) * 2, 2, 4);
+    C.fillRect(n.x + 11, n.y - 62 + Math.cos(tick * 0.2) * 2, 2, 4);
   }
 }
 

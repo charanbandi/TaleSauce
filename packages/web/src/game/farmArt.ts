@@ -193,10 +193,20 @@ export function renderFarm(ctx: CanvasRenderingContext2D, W: number, H: number, 
   C.imageSmoothingEnabled = false;
   grassBackground(W, H);
 
-  // dirt path from house down toward the garden/pond
-  C.strokeStyle = "#c2a878"; C.lineWidth = 14; C.lineCap = "round";
-  C.beginPath(); C.moveTo(W * 0.18, H * 0.22); C.quadraticCurveTo(W * 0.35, H * 0.45, W * 0.5, H * 0.6); C.stroke();
-  C.strokeStyle = "#b59868"; C.lineWidth = 10; C.stroke();
+  // dirt path: a clean, even path from the house door to the garden gate
+  const p0x = W * 0.13, p0y = H * 0.20, p1x = W * 0.22, p1y = H * 0.34, p2x = W * 0.29, p2y = H * 0.44;
+  const bez = (t: number, a: number, b: number, c: number) => (1 - t) * (1 - t) * a + 2 * (1 - t) * t * b + t * t * c;
+  C.lineCap = "round"; C.lineJoin = "round";
+  C.strokeStyle = "#9c7f52"; C.lineWidth = 24;                                  // soil border
+  C.beginPath(); C.moveTo(p0x, p0y); C.quadraticCurveTo(p1x, p1y, p2x, p2y); C.stroke();
+  C.strokeStyle = "#c6ab78"; C.lineWidth = 16;                                  // packed dirt
+  C.beginPath(); C.moveTo(p0x, p0y); C.quadraticCurveTo(p1x, p1y, p2x, p2y); C.stroke();
+  const prnd = makeRand(7);                                                      // pebbles/footprints
+  for (let i = 0; i <= 16; i++) {
+    const t = i / 16, x = bez(t, p0x, p1x, p2x), y = bez(t, p0y, p1y, p2y);
+    C.fillStyle = prnd() < 0.5 ? "#b59868" : "#8d7048";
+    C.fillRect(x - 4 + prnd() * 8, y - 4 + prnd() * 8, 2, 2);
+  }
   C.lineWidth = 1;
 
   // treeline border along the top

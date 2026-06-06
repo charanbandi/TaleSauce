@@ -4,7 +4,7 @@ import { ChatPanel } from "./ChatPanel.js";
 import { AgentConfigPanel } from "./AgentConfigPanel.js";
 import { addAgent } from "../net/rest.js";
 
-const SLIDE_KEYFRAMES = `@keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }`;
+const SLIDE_UP = `@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }`;
 
 type Caps = { openclaw: boolean; claudecode: boolean; codex: boolean; cursor: boolean };
 const DEFAULT_CAPS: Caps = { openclaw: true, claudecode: true, codex: false, cursor: false };
@@ -15,9 +15,16 @@ const BRAIN_LABELS: Record<string, string> = {
 const CODING_BRAINS = ["claudecode", "codex", "cursor"];
 type BrainKind = "openclaw" | "claudecode" | "codex" | "cursor";
 
+const drawerStyle: React.CSSProperties = {
+  height: "42vh", maxHeight: 460, minHeight: 220, flexShrink: 0,
+  background: "#fff", borderTop: "2px solid #241a14", boxShadow: "0 -3px 10px rgba(0,0,0,.15)",
+  display: "flex", flexDirection: "column", animation: "slideUp 0.2s ease-out",
+};
+
 export function RightPanel({ adding, onCloseAdd, caps = DEFAULT_CAPS }: { adding: boolean; onCloseAdd: () => void; caps?: Caps }) {
   const selectedId = useStore((s) => s.selectedId);
   const select = useStore((s) => s.select);
+  const agent = useStore((s) => (selectedId ? s.agents[selectedId] : null));
   const [tab, setTab] = useState<"chat" | "config">("chat");
 
   if (adding) return <AddAgentForm onClose={onCloseAdd} caps={caps} />;
@@ -25,12 +32,13 @@ export function RightPanel({ adding, onCloseAdd, caps = DEFAULT_CAPS }: { adding
 
   return (
     <>
-      <style>{SLIDE_KEYFRAMES}</style>
-      <div style={{ position: "fixed", top: 0, right: 0, width: 340, height: "100vh", background: "#fff", boxShadow: "-2px 0 8px rgba(0,0,0,.2)", display: "flex", flexDirection: "column", animation: "slideIn 0.18s ease-out" }}>
-        <div style={{ display: "flex", gap: 6, padding: 8, background: "#f3ead6" }}>
+      <style>{SLIDE_UP}</style>
+      <div style={drawerStyle}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 10px", background: "#f3ead6", flexShrink: 0 }}>
+          <strong style={{ fontFamily: "monospace", fontSize: 13 }}>{agent?.config.name ?? "Agent"}</strong>
           <button onClick={() => setTab("chat")} disabled={tab === "chat"}>Chat</button>
           <button onClick={() => setTab("config")} disabled={tab === "config"}>Config</button>
-          <button style={{ marginLeft: "auto" }} onClick={() => select(null)}>✕</button>
+          <button style={{ marginLeft: "auto" }} onClick={() => select(null)}>✕ Close</button>
         </div>
         <div style={{ flex: 1, minHeight: 0 }}>
           {tab === "chat" ? <ChatPanel agentId={selectedId} /> : <AgentConfigPanel agentId={selectedId} caps={caps} />}
@@ -63,9 +71,12 @@ function AddAgentForm({ onClose, caps }: { onClose: () => void; caps: Caps }) {
 
   return (
     <>
-      <style>{SLIDE_KEYFRAMES}</style>
-      <div style={{ position: "fixed", top: 0, right: 0, width: 340, height: "100vh", background: "#fff", boxShadow: "-2px 0 8px rgba(0,0,0,.2)", padding: 12, fontFamily: "monospace", animation: "slideIn 0.18s ease-out" }}>
-        <h3>Add agent</h3>
+      <style>{SLIDE_UP}</style>
+      <div style={{ ...drawerStyle, padding: 12, fontFamily: "monospace", gap: 8, overflowY: "auto" }}>
+        <div style={{ display: "flex", alignItems: "center" }}>
+          <h3 style={{ margin: 0 }}>Add agent</h3>
+          <button style={{ marginLeft: "auto" }} onClick={onClose}>✕ Close</button>
+        </div>
         <div><label>Name <input value={name} onChange={(e) => setName(e.target.value)} /></label></div>
         <div><label>Brain&nbsp;
           <select value={brainKind} onChange={(e) => setBrainKind(e.target.value as BrainKind)}>
@@ -78,7 +89,7 @@ function AddAgentForm({ onClose, caps }: { onClose: () => void; caps: Caps }) {
         {CODING_BRAINS.includes(brainKind) && (
           <div><label>Working dir <input value={workingDir} placeholder="/path/to/repo" onChange={(e) => setWorkingDir(e.target.value)} /></label></div>
         )}
-        <div style={{ marginTop: 12 }}><button onClick={submit}>Create</button> <button onClick={onClose}>Cancel</button></div>
+        <div style={{ marginTop: 8 }}><button onClick={submit}>Create</button> <button onClick={onClose}>Cancel</button></div>
       </div>
     </>
   );

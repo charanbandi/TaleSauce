@@ -104,6 +104,12 @@ export class AgentSprite {
   /** Current sprite position (scene px) — used for scene-level click selection. */
   getPos(): { x: number; y: number } { return { x: this.sprite.x, y: this.sprite.y }; }
 
+  /** Re-home the agent (e.g. after the scene is resized) and walk it there. */
+  setHome(point: { x: number; y: number }): void {
+    this.home = point;
+    if (!this.onErrand) this.walkTo(point.x, point.y);
+  }
+
   private restKey() { return this.deskWork ? this.deskKey : this.idleKey; }
 
   private updateDepths(): void {
@@ -118,7 +124,7 @@ export class AgentSprite {
   private walkTo(x: number, y: number, onArrive?: () => void) {
     const dist = Phaser.Math.Distance.Between(this.sprite.x, this.sprite.y, x, y);
     if (dist < 2) { if (this.sprite.anims.currentAnim?.key !== this.restKey()) this.sprite.play(this.restKey()); onArrive?.(); return; }
-    const duration = Math.min(1100, Math.max(180, dist * 5));
+    const duration = Math.min(2800, Math.max(220, dist * 9)); // ~0.11 px/ms — a natural walking pace
     this.sprite.setFlipX(x < this.sprite.x);
     this.sprite.play(this.walkKey, true);
     this.tween?.stop();
