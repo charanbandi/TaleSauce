@@ -1,59 +1,45 @@
-import { BaseScene, emptyGrid } from "./BaseScene.js";
+import Phaser from "phaser";
+import { BaseScene } from "./BaseScene.js";
 import { FARM_SPOTS } from "../ActionSystem.js";
 import { TILE_SIZE } from "../assets/manifest.js";
+import { renderFarm, FARM_SEATS } from "../farmArt.js";
 
-const MAP_W = 24, MAP_H = 16;
-
-// ── Verified frame indices (read from the source sheets) ─────────────────────
-// grass.png is an 11-wide autotile; frame 12 = solid centre tile (seamless).
-const G_SOLID = 12;
-// plants.png (6×2) — mature crop sprites (end of each row = fully grown).
-const CROP_A = 5, CROP_B = 11;
-// grass_things.png (9×5) — row 0 = trees, row 1 = bushes.
-const TREE_A = 0, TREE_B = 1, TREE_C = 2, BUSH = 9;
-const PROP = 2; // prop scale, matches the 2× agents
+const TEX_KEY = "farm-bg";
 
 export class FarmScene extends BaseScene {
+  private tick = 0;
+  private bgCanvas?: HTMLCanvasElement;
+
   constructor() { super("farm"); }
 
   create() {
-    this.cameras.main.setBackgroundColor("#6cbf4b");
     this.registerAnimations();
+    this.cameras.main.setBackgroundColor("#7cc34e"); // grass tone, fills any gap
 
-    // ── Ground: seamless solid grass across the whole viewport ───────────
-    const cols = Math.max(MAP_W, Math.ceil(this.scale.width / TILE_SIZE) + 1);
-    const rows = Math.max(MAP_H, Math.ceil(this.scale.height / TILE_SIZE) + 1);
-    const ground = emptyGrid(rows, cols, G_SOLID);
+    const W = Math.max(640, Math.floor(this.scale.width));
+    const H = Math.max(480, Math.floor(this.scale.height));
 
-    this.buildTilemap([
-      { tilesetKey: "grass", data: ground, depth: -100 },
-    ]);
+    const canvas = document.createElement("canvas");
+    canvas.width = W; canvas.height = H;
+    this.bgCanvas = canvas;
+    const ctx = canvas.getContext("2d")!;
+    renderFarm(ctx, W, H, 0);
 
-    // ── Vegetable patch: a tidy grid of mature crops on the grass ────────
-    for (let i = 0; i < 4; i++) {
-      this.placeSprite("plants", CROP_A, 4 + i * 2, 9,  -55, PROP);
-      this.placeSprite("plants", CROP_B, 5 + i * 2, 11, -55, PROP);
-    }
+    if (this.textures.exists(TEX_KEY)) this.textures.remove(TEX_KEY);
+    this.textures.addCanvas(TEX_KEY, canvas);
+    this.add.image(0, 0, TEX_KEY).setOrigin(0, 0).setDepth(-100);
 
-    // ── House (whole-image prop), top-left ───────────────────────────────
-    this.placeImage("house", 3, 4, 1, -40);
-
-    // ── Trees framing the scene (sparse, tasteful, scaled to match agents) ─
-    this.placeSprite("things", TREE_A, 0, 1, -38, PROP);
-    this.placeSprite("things", TREE_B, 17, 1, -38, PROP);
-    this.placeSprite("things", TREE_C, 20, 3, -38, PROP);
-    this.placeSprite("things", TREE_A, 22, 9, -38, PROP);
-    this.placeSprite("things", TREE_B, 1, 13, -38, PROP);
-
-    // ── A few bushes for life ────────────────────────────────────────────
-    this.placeSprite("things", BUSH, 12, 6, -38, PROP);
-    this.placeSprite("things", BUSH, 15, 13, -38, PROP);
-    this.placeSprite("things", BUSH, 10, 3, -38, PROP);
-
-    // ── Small animated pond, lower-right ─────────────────────────────────
-    this.waterAnim(16, 11, 4, 3, -58);
+    // Re-render ~10fps so the pond shimmers and crops sway.
+    this.time.addEvent({
+      delay: 100, loop: true, callback: () => {
+        if (!this.bgCanvas) return;
+        const c = this.bgCanvas.getContext("2d")!;
+        renderFarm(c, this.bgCanvas.width, this.bgCanvas.height, ++this.tick);
+        (this.textures.get(TEX_KEY) as Phaser.Textures.CanvasTexture).refresh();
+      },
+    });
 
     const sfx = this.createSoundSystem("farm");
-    this.spawnAgents("farm", FARM_SPOTS, { x: this.scale.width / 2, y: this.scale.height - TILE_SIZE }, sfx);
+    this.spawnAgents("farm", FARM_SPOTS, { x: this.scale.width / 2, y: this.scale.height - TILE_SIZE }, sfx, [...FARM_SEATS]);
   }
 }
