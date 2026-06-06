@@ -13,7 +13,6 @@ export class OfficeScene extends BaseScene {
   constructor() { super("office"); }
 
   create() {
-    this.registerAnimations();
     this.cameras.main.setBackgroundColor("#c9cdd3"); // floor tone, fills any gap
 
     const W = Math.max(640, Math.floor(this.scale.width));

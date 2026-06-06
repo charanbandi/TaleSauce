@@ -1,52 +1,18 @@
 # Asset Licenses & Credits
 
-TaleSauce is a non-commercial, open-source portfolio project. The bundled art
-comes from the sources below. Please respect each pack's terms.
+TaleSauce is a non-commercial, open-source portfolio project. The farm and office
+are drawn **procedurally in code** (no image tilesets) — see
+`packages/web/src/game/officeArt.ts`, `farmArt.ts`, and `characterArt.ts`. The only
+bundled binary assets are audio. Credits below.
 
-## Sprout Lands — Basic Pack (farm tiles + character)
-
-- **From:** Sprout Lands
-- **By:** Cup Nooble — https://cupnooble.itch.io/sprout-lands-asset-pack
-- **Used for:** the farm environment (grass, tilled soil, plants) and the
-  animated character sprite (`assets/farm/*`, `assets/characters/sprout_*.png`).
-- **License terms (Free Basic Pack):** assets may be used and modified in
-  non-commercial projects; open-source projects may include them with credit;
-  the asset pack itself may **not** be redistributed/resold as a pack, and no
-  NFT/AI-training use. This repository is non-commercial and open-source and
-  credits the author here per those terms.
-
-> Assets — From: Sprout Lands — By: Cup Nooble.
-
-## Kenney — Tiny Town, Tiny Dungeon, Roguelike/Modern City (office + tiles)
-
-- **By:** Kenney — https://kenney.nl
-- **Used for:** the office environment tiles (`assets/office/*`).
-- **License:** Creative Commons Zero (CC0 1.0) — public domain, free for any
-  use including commercial. Crediting Kenney is appreciated but not required.
-
-## LimeZu — Modern Interiors (office interior: floor + furniture)
-
-- **By:** LimeZu — https://limezu.itch.io/moderninteriors
-- **Used for:** the office floor and furniture (`assets/office/room_builder.png`,
-  `assets/office/interiors.png`) — the free version of the Modern Interiors pack.
-- **License:** free version, usable in non-commercial and commercial projects with
-  credit to LimeZu. (Consider buying the full pack to support the author.)
-
-## My Virtual Office (office rendering — code, MIT)
+## My Virtual Office (procedural rendering — code, MIT)
 
 - **By:** Virtual Office Contributors — https://myvirtualoffice.ai (MIT License)
-- **Used for:** the procedural office renderer (`packages/web/src/game/officeArt.ts`)
-  is adapted from this project's canvas furniture-drawing code (desks, kitchen,
-  lounge, plants, etc.). No image assets are copied; the office is drawn in code.
+- **Used for:** the procedural office/character renderers
+  (`packages/web/src/game/officeArt.ts`, `characterArt.ts`) are adapted in spirit
+  from this project's canvas drawing code (furniture, pixel characters). No image
+  assets are copied; everything is drawn in code.
 - **License:** MIT — permits use/modification with the copyright notice retained.
-
-## Placeholder art (fallback)
-
-- `assets/generate-placeholders.mjs` and the PNGs it produces
-  (`assets/tiles/tilemap.png`, `assets/characters/character.png`) are original
-  to this project and released as CC0. They are a fallback; the app uses the
-  Sprout Lands / Kenney art above by default (see
-  `packages/web/src/game/assets/manifest.ts`).
 
 ## Audio
 

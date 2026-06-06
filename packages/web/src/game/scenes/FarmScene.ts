@@ -13,7 +13,6 @@ export class FarmScene extends BaseScene {
   constructor() { super("farm"); }
 
   create() {
-    this.registerAnimations();
     this.cameras.main.setBackgroundColor("#7cc34e"); // grass tone, fills any gap
 
     const W = Math.max(640, Math.floor(this.scale.width));
