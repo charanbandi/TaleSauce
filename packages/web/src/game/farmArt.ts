@@ -151,6 +151,37 @@ function scarecrow(x: number, y: number) {
   fr(x - 2, y - 31, 1, 1, "#000"); fr(x + 1, y - 31, 1, 1, "#000");
 }
 
+// ── ambient chickens (wander + peck) ────────────────────────────────────────
+interface Chicken { x: number; y: number; tx: number; ty: number; timer: number; pecking: boolean; flip: boolean; }
+let chickens: Chicken[] = [];
+function stepChickens(W: number, H: number) {
+  const rnd = makeRand(Date.now() & 0xffff);
+  const pick = (ck: Chicken) => { ck.tx = W * (0.18 + rnd() * 0.6); ck.ty = H * (0.5 + rnd() * 0.42); };
+  if (!chickens.length) {
+    for (let i = 0; i < 3; i++) { const ck: Chicken = { x: W * 0.4, y: H * 0.6, tx: 0, ty: 0, timer: i * 20, pecking: false, flip: false }; pick(ck); chickens.push(ck); }
+  }
+  for (const ck of chickens) {
+    if (ck.timer > 0) { ck.timer--; continue; }       // pecking / pausing
+    const dx = ck.tx - ck.x, dy = ck.ty - ck.y, d = Math.hypot(dx, dy);
+    if (d < 3) { ck.pecking = true; ck.timer = 18 + Math.floor(rnd() * 30); if (rnd() < 0.5) pick(ck); }
+    else { ck.flip = dx < 0; ck.x += (dx / d) * 0.9; ck.y += (dy / d) * 0.7; ck.pecking = false; }
+  }
+}
+function drawChicken(ck: Chicken, tick: number) {
+  const peckDip = ck.pecking ? (Math.sin(tick * 0.4) > 0 ? 3 : 0) : 0;
+  C.save(); C.translate(ck.x, ck.y); if (ck.flip) C.scale(-1, 1);
+  C.fillStyle = "rgba(0,0,0,0.15)"; C.beginPath(); C.ellipse(0, 2, 7, 2.5, 0, 0, Math.PI * 2); C.fill();
+  fr(2, 1, 1, 3, "#e6a23c"); fr(-2, 1, 1, 3, "#e6a23c");            // legs
+  C.fillStyle = "#fff"; C.beginPath(); C.ellipse(0, -3, 6, 5, 0, 0, Math.PI * 2); C.fill(); // body
+  C.fillStyle = "#e0e0e0"; C.beginPath(); C.ellipse(1, -2, 4, 3, 0, 0, Math.PI * 2); C.fill(); // wing
+  fr(-6, -6, 3, 4, "#fff");                                          // tail
+  C.fillStyle = "#fff"; C.beginPath(); C.arc(4, -7 + peckDip, 3, 0, Math.PI * 2); C.fill(); // head
+  fr(4, -10 + peckDip, 2, 2, "#e53935");                             // comb
+  fr(6, -7 + peckDip, 3, 2, "#f6a609");                              // beak
+  fr(4, -8 + peckDip, 1, 1, "#222");                                 // eye
+  C.restore();
+}
+
 // ── seats (work spots) for agents, in canvas pixels ──────────────────────────
 export interface FarmSeat { x: number; y: number; }
 export let FARM_SEATS: FarmSeat[] = [];
@@ -190,6 +221,10 @@ export function renderFarm(ctx: CanvasRenderingContext2D, W: number, H: number, 
   haystack(W * 0.1, H * 0.5); haystack(W * 0.16, H * 0.52);
   flowerPatch(W * 0.5, H * 0.2, "#f06292"); flowerPatch(W * 0.66, H * 0.16, "#ffffff");
   flowerPatch(W * 0.34, H * 0.7, "#ba68c8"); flowerPatch(W * 0.8, H * 0.5, "#ffd54f");
+
+  // ambient chickens
+  stepChickens(W, H);
+  for (const ck of chickens) drawChicken(ck, tick);
 
   // agent work spots: along the garden front + by the pond
   FARM_SEATS = [

@@ -4,6 +4,8 @@
  * Everything is hand-drawn with fillRect so the scene is dense and cohesive (no tilesets).
  */
 
+import { drawCharacter, type CharPalette } from "./characterArt.js";
+
 let C: CanvasRenderingContext2D;
 
 // ── colour helpers ──────────────────────────────────────────────────────────
@@ -224,6 +226,41 @@ function zoneLabel(x: number, y: number, text: string, color: string) {
   C.textAlign = "left"; C.textBaseline = "alphabetic";
 }
 
+// ── ambient colleague: walks to the coffee maker, brews, returns ─────────────
+type NpcState = "toCoffee" | "brew" | "toHome" | "idle";
+interface Npc { x: number; y: number; state: NpcState; timer: number; flip: boolean; }
+let npc: Npc | null = null;
+const NPC_PAL: CharPalette = { shirt: "#5e35b1", skin: "#e8b88a", hair: "#3e2723", pants: "#37474f" };
+
+function stepAndDrawNpc(W: number, H: number, coffee: { x: number; y: number }, tick: number) {
+  const home = { x: W * 0.5, y: H * 0.46 };
+  if (!npc) npc = { x: home.x, y: home.y, state: "idle", timer: 80, flip: false };
+  const n = npc;
+  let moving = false;
+  if (n.timer > 0) {
+    n.timer--;
+  } else if (n.state === "toCoffee" || n.state === "toHome") {
+    const tgt = n.state === "toCoffee" ? coffee : home;
+    const dx = tgt.x - n.x, dy = tgt.y - n.y, d = Math.hypot(dx, dy);
+    if (d < 3) { n.state = n.state === "toCoffee" ? "brew" : "idle"; n.timer = n.state === "brew" ? 50 : 90; }
+    else { moving = true; n.flip = dx < 0; n.x += (dx / d) * 1.4; n.y += (dy / d) * 1.2; }
+  } else if (n.state === "brew") {
+    n.state = "toHome";
+  } else { // idle
+    n.state = "toCoffee";
+  }
+
+  const phase = moving ? (Math.floor(tick / 4) % 2 === 0 ? 1 : 2) : 0;
+  C.save(); C.translate(n.x, n.y); if (n.flip) C.scale(-1, 1);
+  drawCharacter(C, 0, 0, NPC_PAL, phase);
+  C.restore();
+  if (n.state === "brew") { // steam
+    C.fillStyle = "rgba(255,255,255,0.4)";
+    C.fillRect(n.x + 4, n.y - 40 + Math.sin(tick * 0.2) * 2, 2, 4);
+    C.fillRect(n.x + 8, n.y - 44 + Math.cos(tick * 0.2) * 2, 2, 4);
+  }
+}
+
 // ── seat positions (desk centres) for agents, in office-canvas pixels ────────
 export interface DeskSeat { x: number; y: number; }
 export let OFFICE_DESKS: DeskSeat[] = [];
@@ -299,4 +336,7 @@ export function renderOffice(ctx: CanvasRenderingContext2D, W: number, H: number
   plant(W * 0.32 - 30, ky + 4);
   tallPlant(W - 36, H - 92);
   plant(W * 0.66, H - 60);
+
+  // ── ambient colleague making coffee ──
+  stepAndDrawNpc(W, H, { x: W * 0.32 + 16, y: ky + 6 }, tick);
 }
