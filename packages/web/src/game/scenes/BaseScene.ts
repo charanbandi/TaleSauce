@@ -91,11 +91,11 @@ export abstract class BaseScene extends Phaser.Scene {
     // Idle agents occasionally take a coffee/water break (walk to the spot and back).
     if (opts?.breakSpot) {
       this.time.addEvent({
-        delay: 7000, loop: true, callback: () => {
+        delay: 10000, loop: true, callback: () => {
           const all = useStore.getState().agents;
           const free = Object.values(all).filter((rt) => rt.config.environment === env && rt.state === "idle")
             .map((rt) => this.agents.get(rt.config.id)).filter((s): s is AgentSprite => !!s && !s.state.onErrand);
-          if (free.length && Math.random() < 0.5) free[Math.floor(Math.random() * free.length)].goOnErrand(opts.breakSpot!, 1800);
+          if (free.length && Math.random() < 0.6) free[Math.floor(Math.random() * free.length)].goOnErrand(opts.breakSpot!, 1800);
         },
       });
     }
