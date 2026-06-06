@@ -2,7 +2,7 @@ import Phaser from "phaser";
 import { BaseScene } from "./BaseScene.js";
 import { FARM_SPOTS } from "../ActionSystem.js";
 import { TILE_SIZE } from "../assets/manifest.js";
-import { renderFarm, FARM_SEATS } from "../farmArt.js";
+import { renderFarm, FARM_SEATS, FARM_WELL } from "../farmArt.js";
 
 const TEX_KEY = "farm-bg";
 
@@ -39,6 +39,6 @@ export class FarmScene extends BaseScene {
     });
 
     const sfx = this.createSoundSystem("farm");
-    this.spawnAgents("farm", FARM_SPOTS, { x: this.scale.width / 2, y: this.scale.height - TILE_SIZE }, sfx, [...FARM_SEATS]);
+    this.spawnAgents("farm", FARM_SPOTS, { x: this.scale.width / 2, y: this.scale.height - TILE_SIZE }, sfx, [...FARM_SEATS], { deskWork: false, breakSpot: FARM_WELL });
   }
 }

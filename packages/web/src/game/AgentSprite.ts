@@ -4,7 +4,11 @@ import { nextSpriteIntent, type SpriteIntent } from "./stateMachine.js";
 import type { AgentVisualState } from "@talesauce/shared";
 import { ensureCharTexture, appearanceFor, CHAR_FH } from "./characterArt.js";
 
-export interface AgentSpriteOpts { x: number; y: number; name: string; id?: string; homePx?: { x: number; y: number }; }
+export interface AgentSpriteOpts {
+  x: number; y: number; name: string; id?: string;
+  homePx?: { x: number; y: number };
+  deskWork?: boolean;           // office desk agents type; others stand idle
+}
 
 const SPRITE_SCALE = 1.4;
 
@@ -25,30 +29,28 @@ export class AgentSprite {
   private bubble: Phaser.GameObjects.Text;
   private tween?: Phaser.Tweens.Tween;
   private home?: { x: number; y: number };
+  private deskWork: boolean;
+  private onErrand = false;
   private walkKey: string;
   private idleKey: string;
+  private deskKey: string;
 
   constructor(private scene: Phaser.Scene, opts: AgentSpriteOpts) {
     this.home = opts.homePx;
+    this.deskWork = !!opts.deskWork && !!opts.homePx;
     const px = opts.homePx ? opts.homePx.x : opts.x * TILE_SIZE;
     const py = opts.homePx ? opts.homePx.y : opts.y * TILE_SIZE;
 
     const key = `char-${opts.id ?? opts.name}`;
     ensureCharTexture(scene, key, appearanceFor(opts.name, opts.id ?? opts.name));
-    this.walkKey = `${key}-walk`;
-    this.idleKey = `${key}-idle`;
-    if (!scene.anims.exists(this.walkKey)) {
-      scene.anims.create({ key: this.walkKey, frames: [{ key, frame: 1 }, { key, frame: 2 }], frameRate: 6, repeat: -1 });
-    }
-    if (!scene.anims.exists(this.idleKey)) {
-      // mostly still, with an occasional blink (frame 3)
-      const idle = [0, 0, 0, 0, 0, 0, 0, 0, 3].map((frame) => ({ key, frame }));
-      scene.anims.create({ key: this.idleKey, frames: idle, frameRate: 3, repeat: -1 });
-    }
+    this.walkKey = `${key}-walk`; this.idleKey = `${key}-idle`; this.deskKey = `${key}-desk`;
+    if (!scene.anims.exists(this.walkKey)) scene.anims.create({ key: this.walkKey, frames: [{ key, frame: 1 }, { key, frame: 2 }], frameRate: 6, repeat: -1 });
+    if (!scene.anims.exists(this.idleKey)) scene.anims.create({ key: this.idleKey, frames: [0, 0, 0, 0, 0, 0, 0, 0, 3].map((frame) => ({ key, frame })), frameRate: 3, repeat: -1 });
+    if (!scene.anims.exists(this.deskKey)) scene.anims.create({ key: this.deskKey, frames: [4, 5, 4, 5, 4, 5, 4, 3, 4, 5, 0].map((frame) => ({ key, frame })), frameRate: 6, repeat: -1 });
 
     this.shadow = scene.add.ellipse(px, py + 1, 14, 5, 0x000000, 0.18);
     this.sprite = scene.add.sprite(px, py, key, 0).setOrigin(0.5, 0.92).setScale(SPRITE_SCALE);
-    this.sprite.play(this.idleKey);
+    this.sprite.play(this.restKey());
 
     this.label = scene.add.text(px, this.labelY(), opts.name, {
       fontFamily: "monospace", fontSize: "9px", color: "#fff", stroke: "#241a14", strokeThickness: 3,
@@ -56,22 +58,53 @@ export class AgentSprite {
     this.bubble = scene.add.text(px, this.bubbleY(), "", { fontSize: "14px" }).setOrigin(0.5, 1);
 
     this.updateDepths();
+
+    // Occasional "look around" for desk workers (brief glance left/right).
+    if (this.deskWork) {
+      scene.time.addEvent({
+        delay: 9000, loop: true, callback: () => {
+          if (this.onErrand || this.tween?.isPlaying()) return;
+          this.sprite.setFlipX(!this.sprite.flipX);
+          scene.time.delayedCall(1400, () => { if (!this.onErrand) this.sprite.setFlipX(false); });
+        },
+      });
+    }
   }
 
   applyState(state: AgentVisualState, frontPoint: { x: number; y: number }, workstation: { x: number; y: number }) {
     const intent: SpriteIntent = nextSpriteIntent(state);
     this.bubble.setText(this.bubbleGlyph(intent.bubble));
+    if (this.onErrand) return; // an errand (e.g. coffee break) owns movement until it finishes
     const deskOrStation = this.home ?? workstation;
     const wander = this.home
-      ? { x: this.home.x + Phaser.Math.Between(-6, 6), y: this.home.y + Phaser.Math.Between(-4, 4) }
+      ? { x: this.home.x, y: this.home.y }
       : { x: this.sprite.x + Phaser.Math.Between(-40, 40), y: this.sprite.y + Phaser.Math.Between(-24, 24) };
     const target =
       intent.move === "front"       ? frontPoint :
       intent.move === "workstation" ? deskOrStation :
       wander;
-    this.moveTo(target.x, target.y);
+    this.walkTo(target.x, target.y);
     this.updateDepths();
   }
+
+  /** Send the agent on a round-trip errand (walk there, pause, walk home). */
+  goOnErrand(point: { x: number; y: number }, pauseMs: number): void {
+    if (this.onErrand || !this.home) return;
+    this.onErrand = true;
+    this.walkTo(point.x, point.y, () => {
+      this.sprite.play(this.idleKey); // stand at the machine
+      this.scene.time.delayedCall(pauseMs, () => {
+        this.walkTo(this.home!.x, this.home!.y, () => { this.onErrand = false; });
+      });
+    });
+  }
+
+  get state(): { onErrand: boolean } { return { onErrand: this.onErrand }; }
+
+  /** Current sprite position (scene px) — used for scene-level click selection. */
+  getPos(): { x: number; y: number } { return { x: this.sprite.x, y: this.sprite.y }; }
+
+  private restKey() { return this.deskWork ? this.deskKey : this.idleKey; }
 
   private updateDepths(): void {
     const d = this.sprite.y;
@@ -82,10 +115,10 @@ export class AgentSprite {
   private labelY() { return this.sprite.y - this.spriteH() * 0.92 - 2; }
   private bubbleY() { return this.sprite.y - this.spriteH() * 0.92 - 14; }
 
-  private moveTo(x: number, y: number) {
+  private walkTo(x: number, y: number, onArrive?: () => void) {
     const dist = Phaser.Math.Distance.Between(this.sprite.x, this.sprite.y, x, y);
-    if (dist < 2) { if (this.sprite.anims.currentAnim?.key !== this.idleKey) this.sprite.play(this.idleKey); return; }
-    const duration = Math.min(900, Math.max(180, dist * 5));
+    if (dist < 2) { if (this.sprite.anims.currentAnim?.key !== this.restKey()) this.sprite.play(this.restKey()); onArrive?.(); return; }
+    const duration = Math.min(1100, Math.max(180, dist * 5));
     this.sprite.setFlipX(x < this.sprite.x);
     this.sprite.play(this.walkKey, true);
     this.tween?.stop();
@@ -97,7 +130,7 @@ export class AgentSprite {
         this.bubble.setPosition(this.sprite.x, this.bubbleY());
         this.updateDepths();
       },
-      onComplete: () => { this.sprite.play(this.idleKey); },
+      onComplete: () => { this.sprite.play(this.restKey()); onArrive?.(); },
     });
   }
 

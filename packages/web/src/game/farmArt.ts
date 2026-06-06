@@ -185,6 +185,8 @@ function drawChicken(ck: Chicken, tick: number) {
 // ── seats (work spots) for agents, in canvas pixels ──────────────────────────
 export interface FarmSeat { x: number; y: number; }
 export let FARM_SEATS: FarmSeat[] = [];
+/** Water-break destination by the pond (scene coords), set during render. */
+export const FARM_WELL = { x: 0, y: 0 };
 
 export function renderFarm(ctx: CanvasRenderingContext2D, W: number, H: number, tick: number) {
   C = ctx;
@@ -211,6 +213,7 @@ export function renderFarm(ctx: CanvasRenderingContext2D, W: number, H: number, 
 
   // pond, lower area
   pond(W * 0.72, H * 0.74, 60, 38, tick);
+  FARM_WELL.x = W * 0.72; FARM_WELL.y = H * 0.74 + 46; // where agents stand for a water break
 
   // decor scatter
   tree(W * 0.86, H * 0.30, 1.1);

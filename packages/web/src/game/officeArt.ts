@@ -264,6 +264,8 @@ function stepAndDrawNpc(W: number, H: number, coffee: { x: number; y: number }, 
 // ── seat positions (desk centres) for agents, in office-canvas pixels ────────
 export interface DeskSeat { x: number; y: number; }
 export let OFFICE_DESKS: DeskSeat[] = [];
+/** Coffee-break destination (in office-canvas/scene coords), set during render. */
+export const OFFICE_COFFEE = { x: 0, y: 0 };
 
 /**
  * Render the whole office to `ctx`, sized W×H. `tick` drives screen animation.
@@ -338,5 +340,6 @@ export function renderOffice(ctx: CanvasRenderingContext2D, W: number, H: number
   plant(W * 0.66, H - 60);
 
   // ── ambient colleague making coffee ──
+  OFFICE_COFFEE.x = W * 0.32 + 40; OFFICE_COFFEE.y = ky + 4; // where real agents stand for a coffee break
   stepAndDrawNpc(W, H, { x: W * 0.32 + 16, y: ky + 6 }, tick);
 }

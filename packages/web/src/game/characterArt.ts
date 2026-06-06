@@ -131,9 +131,14 @@ export function drawCharacter(c: CanvasRenderingContext2D, cx: number, feetY: nu
     fr(c, -6, -1 - bob + swing, 5, 2, "#263238"); fr(c, 1, -1 - bob - swing, 5, 2, "#263238"); // shoes
   }
 
-  // arms (behind body), swing opposite legs
-  fr(c, -bodyW - 3, -22 - bob + swing, 3, 10, a.shirt);
-  fr(c, bodyW, -22 - bob - swing, 3, 10, a.shirt);
+  const typing = phase === 4 || phase === 5;
+  const typeLift = phase === 5 ? 2 : 0;
+
+  // arms (behind body), swing opposite legs — skipped while typing (drawn in front below)
+  if (!typing) {
+    fr(c, -bodyW - 3, -22 - bob + swing, 3, 10, a.shirt);
+    fr(c, bodyW, -22 - bob - swing, 3, 10, a.shirt);
+  }
 
   // torso / clothing
   if (a.shirtStyle === "dress") {
@@ -151,9 +156,14 @@ export function drawCharacter(c: CanvasRenderingContext2D, cx: number, feetY: nu
       fr(c, -6, -14 - bob, 12, 3, darken(a.shirt, 0.18));           // pocket
     }
   }
-  // hands
-  fr(c, -bodyW - 3, -12 - bob + swing, 3, 2, a.skin);
-  fr(c, bodyW, -12 - bob - swing, 3, 2, a.skin);
+  // hands / forearms
+  if (typing) {
+    fr(c, -7, -20 - bob, 3, 8, a.shirt); fr(c, 4, -20 - bob, 3, 8, a.shirt);            // forearms forward
+    fr(c, -8, -13 - bob - typeLift, 4, 3, a.skin); fr(c, 4, -13 - bob - typeLift, 4, 3, a.skin); // hands on keyboard
+  } else {
+    fr(c, -bodyW - 3, -12 - bob + swing, 3, 2, a.skin);
+    fr(c, bodyW, -12 - bob - swing, 3, 2, a.skin);
+  }
 
   // head + neck shade
   fr(c, -11, -37 - bob, 22, 16, a.skin);
@@ -178,14 +188,17 @@ export function drawCharacter(c: CanvasRenderingContext2D, cx: number, feetY: nu
   c.restore();
 }
 
-/** Build (once) a 4-frame spritesheet texture for an agent. */
+/** Frames: 0 idle, 1 walk-A, 2 walk-B, 3 blink, 4 type-down, 5 type-up. */
+export const CHAR_FRAMES = 6;
+
+/** Build (once) the spritesheet texture for an agent. */
 export function ensureCharTexture(scene: Phaser.Scene, key: string, a: Appearance): void {
   if (scene.textures.exists(key)) return;
   const canvas = document.createElement("canvas");
-  canvas.width = CHAR_FW * 4; canvas.height = CHAR_FH;
+  canvas.width = CHAR_FW * CHAR_FRAMES; canvas.height = CHAR_FH;
   const ctx = canvas.getContext("2d")!;
   ctx.imageSmoothingEnabled = false;
-  for (let f = 0; f < 4; f++) drawCharacter(ctx, f * CHAR_FW + CHAR_FW / 2, CHAR_FH - 5, a, f);
+  for (let f = 0; f < CHAR_FRAMES; f++) drawCharacter(ctx, f * CHAR_FW + CHAR_FW / 2, CHAR_FH - 5, a, f);
   const tex = scene.textures.addCanvas(key, canvas)!;
-  for (let f = 0; f < 4; f++) tex.add(f, 0, f * CHAR_FW, 0, CHAR_FW, CHAR_FH);
+  for (let f = 0; f < CHAR_FRAMES; f++) tex.add(f, 0, f * CHAR_FW, 0, CHAR_FW, CHAR_FH);
 }
