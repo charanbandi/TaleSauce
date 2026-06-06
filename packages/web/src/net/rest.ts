@@ -25,3 +25,6 @@ export async function updateAgent(id: string, patch: unknown) {
 export async function deleteAgent(id: string) {
   await fetch(`${base}/agents/${id}`, { method: "DELETE" });
 }
+export async function resetAgents() {
+  await fetch(`${base}/agents`, { method: "DELETE" });
+}

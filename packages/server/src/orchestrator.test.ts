@@ -91,6 +91,23 @@ describe("Orchestrator", () => {
     expect(orch.pendingPermissions("a1")).toContainEqual({ requestId: "r1", tool: "Bash", summary: "Run: npm test" });
   });
 
+  it("removeAllAgents() deletes every agent and emits agent-removed for each", () => {
+    const db = new Db(":memory:");
+    db.insertAgent(agent);
+    db.insertAgent({ ...agent, id: "a2", name: "Kai", environment: "office", brainKind: "openclaw" });
+    const out: ServerEvent[] = [];
+    const orch = new Orchestrator(db, () => new FakeBrain());
+    orch.onEvent((e) => out.push(e));
+    expect(orch.runtimes()).toHaveLength(2);
+
+    orch.removeAllAgents();
+
+    expect(orch.runtimes()).toEqual([]);
+    expect(db.listAgents()).toEqual([]);
+    const removed = out.filter((e) => e.type === "agent-removed").map((e: any) => e.agentId).sort();
+    expect(removed).toEqual(["a1", "a2"]);
+  });
+
   it("decide() forwards to the brain and emits permission-resolved", () => {
     const { orch, fake, out } = setup();
     orch.startTask("a1", "x");

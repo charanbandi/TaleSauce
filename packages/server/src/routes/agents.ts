@@ -43,6 +43,11 @@ export function registerAgentRoutes(app: FastifyInstance, orch: Orchestrator) {
     return orch.addAgent(cfg);
   });
 
+  app.delete("/agents", async () => {
+    orch.removeAllAgents();
+    return { ok: true };
+  });
+
   app.delete("/agents/:id", async (req) => {
     const { id } = req.params as { id: string };
     orch.removeAgent(id);

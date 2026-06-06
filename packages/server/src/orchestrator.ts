@@ -60,6 +60,11 @@ export class Orchestrator {
     this.emit({ type: "agent-removed", agentId: id });
   }
 
+  /** Delete every agent so the world starts from scratch. */
+  removeAllAgents(): void {
+    for (const id of [...this.live.keys()]) this.removeAgent(id);
+  }
+
   startTask(agentId: string, task: string) {
     const l = this.live.get(agentId);
     if (!l) return;

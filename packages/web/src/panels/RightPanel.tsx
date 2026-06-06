@@ -37,6 +37,16 @@ export function RightPanel({ adding, onCloseAdd, caps = DEFAULT_CAPS }: { adding
       <div style={drawerStyle}>
         <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 10px", background: "#f3ead6", flexShrink: 0 }}>
           <strong style={{ fontFamily: "monospace", fontSize: 13 }}>{agent?.config.name ?? "Agent"}</strong>
+          {agent && (
+            <>
+              <span style={{ fontSize: 10, padding: "1px 7px", borderRadius: 6, fontWeight: "bold", color: "#241a14", background: agent.config.environment === "office" ? "#9aa6c4" : "#a6c48a" }}>
+                {agent.config.environment === "office" ? "🏢 office" : "🌾 farm"}
+              </span>
+              <span style={{ fontSize: 10, padding: "1px 7px", borderRadius: 6, fontWeight: "bold", color: "#241a14", background: PIX.accent }}>
+                {BRAIN_LABELS[agent.config.brainKind] ?? agent.config.brainKind}
+              </span>
+            </>
+          )}
           <button onClick={() => setTab("chat")} disabled={tab === "chat"}>Chat</button>
           <button onClick={() => setTab("config")} disabled={tab === "config"}>Config</button>
           <button style={{ marginLeft: "auto" }} onClick={() => select(null)}>✕ Close</button>

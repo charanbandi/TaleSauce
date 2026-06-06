@@ -35,6 +35,10 @@ export function TaskDock() {
   const agents = useStore((s) => s.agents);
   const permissions = useStore((s) => s.permissions);
   const select = useStore((s) => s.select);
+  const focus = useStore((s) => s.focus);
+
+  // When a side is focused, only show that side's agents (matching the visible stage).
+  const visible = Object.values(agents).filter((a) => !focus || a.config.environment === focus);
 
   return (
     <div style={{
@@ -43,7 +47,7 @@ export function TaskDock() {
       overflowX: "auto", fontFamily: "monospace", fontSize: 12, minHeight: 72,
     }}>
       <style>{PULSE_KEYFRAMES}</style>
-      {Object.values(agents).map((a) => {
+      {visible.map((a) => {
         const pend = permissions[a.config.id] ?? [];
         const isWorking = a.state === "working" || a.state === "going-to-workstation";
         const bgColor = pend.length ? "#ffedd5" : (CHIP_COLORS[a.state] ?? "#e5e7eb");
