@@ -26,7 +26,12 @@ export abstract class BaseScene extends Phaser.Scene {
 
   protected createSoundSystem(env: "farm" | "office"): SoundSystem {
     const sys = new SoundSystem(this);
-    sys.startAmbient(env);
+    // Only the active environment's ambient plays (follows focus / last-clicked side).
+    const apply = () => { if (useStore.getState().soundEnv === env) sys.startAmbient(env); else sys.stopAmbient(); };
+    apply();
+    const unsub = useStore.subscribe(apply);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, unsub);
+    this.events.once(Phaser.Scenes.Events.DESTROY, unsub);
     return sys;
   }
 
@@ -86,6 +91,8 @@ export abstract class BaseScene extends Phaser.Scene {
 
     // Click anywhere near an agent (in this scene's canvas) to open its chat.
     this.input.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
+      // Clicking a side switches the ambient soundtrack to that environment.
+      if (env === "farm" || env === "office") useStore.getState().setSoundEnv(env);
       let bestId: string | null = null, bestD = Infinity;
       for (const [id, s] of this.agents) {
         const p = s.getPos();

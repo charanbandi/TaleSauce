@@ -38,6 +38,11 @@ describe("applyEvent", () => {
     s = applyEvent(s, { type: "result", agentId: "a1", text: "All done." });
     expect(s.messages.a1.at(-1)).toEqual({ role: "assistant", kind: "result", content: "All done." });
   });
+  it("result shows a placeholder instead of a blank bubble when both streamed and summary are empty", () => {
+    let s = applyEvent(initialState(), { type: "hello", agents: [rt("a1")] });
+    s = applyEvent(s, { type: "result", agentId: "a1", text: "   " });
+    expect(s.messages.a1.at(-1)).toEqual({ role: "assistant", kind: "result", content: "✅ Done — no message to show." });
+  });
   it("question stores a question message", () => {
     let s = applyEvent(initialState(), { type: "hello", agents: [rt("a1")] });
     s = applyEvent(s, { type: "question", agentId: "a1", text: "which?" });

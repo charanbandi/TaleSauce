@@ -43,6 +43,12 @@ export function registerAgentRoutes(app: FastifyInstance, orch: Orchestrator) {
     return orch.addAgent(cfg);
   });
 
+  app.delete("/agents/:id", async (req) => {
+    const { id } = req.params as { id: string };
+    orch.removeAgent(id);
+    return { ok: true };
+  });
+
   app.post("/agents/:id/decision", async (req, reply) => {
     const { id } = req.params as { id: string };
     const { requestId, decision } = req.body as { requestId: string; decision: "allow" | "deny" };

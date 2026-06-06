@@ -3,6 +3,7 @@ import { useStore } from "../store/store.js";
 import { ChatPanel } from "./ChatPanel.js";
 import { AgentConfigPanel } from "./AgentConfigPanel.js";
 import { addAgent } from "../net/rest.js";
+import { PixelField, PixelButton, pixelInput, PIX } from "./pixelUi.js";
 
 const SLIDE_UP = `@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }`;
 
@@ -69,27 +70,47 @@ function AddAgentForm({ onClose, caps }: { onClose: () => void; caps: Caps }) {
     onClose();
   };
 
+  const isCoding = CODING_BRAINS.includes(brainKind);
   return (
     <>
       <style>{SLIDE_UP}</style>
-      <div style={{ ...drawerStyle, padding: 12, fontFamily: "monospace", gap: 8, overflowY: "auto" }}>
-        <div style={{ display: "flex", alignItems: "center" }}>
-          <h3 style={{ margin: 0 }}>Add agent</h3>
-          <button style={{ marginLeft: "auto" }} onClick={onClose}>✕ Close</button>
+      <div style={{ ...drawerStyle, background: PIX.parchment, padding: "12px 18px", fontFamily: "monospace", overflowY: "auto" }}>
+        <div style={{ display: "flex", alignItems: "center", marginBottom: 10 }}>
+          <h3 style={{ margin: 0, color: PIX.ink, fontSize: 18 }}>✨ New agent</h3>
+          <PixelButton onClick={onClose} style={{ marginLeft: "auto" }}>✕ Close</PixelButton>
         </div>
-        <div><label>Name <input value={name} onChange={(e) => setName(e.target.value)} /></label></div>
-        <div><label>Brain&nbsp;
-          <select value={brainKind} onChange={(e) => setBrainKind(e.target.value as BrainKind)}>
-            {kinds.map((k) => <option key={k} value={k}>{BRAIN_LABELS[k]}</option>)}
-          </select></label></div>
-        <div><label>Environment&nbsp;
-          <select value={environment} onChange={(e) => setEnvironment(e.target.value as "farm" | "office")}>
-            <option value="farm">farm</option><option value="office">office</option>
-          </select></label></div>
-        {CODING_BRAINS.includes(brainKind) && (
-          <div><label>Working dir <input value={workingDir} placeholder="/path/to/repo" onChange={(e) => setWorkingDir(e.target.value)} /></label></div>
+        {/* top row: short fields side by side */}
+        <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+          <div style={{ flex: "1 1 180px" }}>
+            <PixelField label="Name"><input value={name} onChange={(e) => setName(e.target.value)} style={pixelInput} /></PixelField>
+          </div>
+          <div style={{ flex: "1 1 160px" }}>
+            <PixelField label="Brain">
+              <select value={brainKind} onChange={(e) => setBrainKind(e.target.value as BrainKind)} style={pixelInput}>
+                {kinds.map((k) => <option key={k} value={k}>{BRAIN_LABELS[k]}</option>)}
+              </select>
+            </PixelField>
+          </div>
+          <div style={{ flex: "1 1 140px" }}>
+            <PixelField label="Environment">
+              <select value={environment} onChange={(e) => setEnvironment(e.target.value as "farm" | "office")} style={pixelInput}>
+                <option value="farm">🌾 farm</option><option value="office">🏢 office</option>
+              </select>
+            </PixelField>
+          </div>
+        </div>
+        {/* wide repo field for cloud/coding agents */}
+        {isCoding && (
+          <PixelField label="📂 Repository / working dir" hint="Absolute path to the local repo this agent will work in.">
+            <input value={workingDir} placeholder="/Users/you/code/my-project"
+              onChange={(e) => setWorkingDir(e.target.value)}
+              style={{ ...pixelInput, fontSize: 15, padding: "12px 14px" }} />
+          </PixelField>
         )}
-        <div style={{ marginTop: 8 }}><button onClick={submit}>Create</button> <button onClick={onClose}>Cancel</button></div>
+        <div style={{ display: "flex", gap: 10, marginTop: 6 }}>
+          <PixelButton variant="primary" onClick={submit}>Create agent</PixelButton>
+          <PixelButton onClick={onClose}>Cancel</PixelButton>
+        </div>
       </div>
     </>
   );

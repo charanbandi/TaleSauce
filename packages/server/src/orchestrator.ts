@@ -51,6 +51,15 @@ export class Orchestrator {
     return runtime;
   }
 
+  removeAgent(id: string): void {
+    const l = this.live.get(id);
+    if (!l) return;
+    try { l.brain.stop(); } catch { /* ignore */ }
+    this.live.delete(id);
+    this.db.deleteAgent(id);
+    this.emit({ type: "agent-removed", agentId: id });
+  }
+
   startTask(agentId: string, task: string) {
     const l = this.live.get(agentId);
     if (!l) return;

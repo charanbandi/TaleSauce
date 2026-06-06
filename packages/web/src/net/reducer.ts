@@ -25,6 +25,13 @@ export function applyEvent(s: AppState, e: ServerEvent): AppState {
     }
     case "agent-added":
       return { ...s, agents: { ...s.agents, [e.agent.config.id]: e.agent }, messages: { ...s.messages, [e.agent.config.id]: s.messages[e.agent.config.id] ?? [] } };
+    case "agent-removed": {
+      const agents = { ...s.agents }; delete agents[e.agentId];
+      const messages = { ...s.messages }; delete messages[e.agentId];
+      const permissions = { ...s.permissions }; delete permissions[e.agentId];
+      const chat = { ...s.chat }; delete chat[e.agentId];
+      return { ...s, agents, messages, permissions, chat };
+    }
     case "agent-state": {
       const a = s.agents[e.agentId]; if (!a) return s;
       return { ...s, agents: { ...s.agents, [e.agentId]: { ...a, state: e.state, activity: e.activity } } };
@@ -38,7 +45,7 @@ export function applyEvent(s: AppState, e: ServerEvent): AppState {
       // reply isn't replaced by a one-shot summary. Fall back to the result text when
       // nothing streamed (e.g. the model answered only via the ✅DONE line).
       const streamed = (s.chat[e.agentId] ?? "").trim();
-      const content = streamed || e.text;
+      const content = streamed || (e.text ?? "").trim() || "✅ Done — no message to show.";
       return pushMsg(clearChat(s, e.agentId), e.agentId, { role: "assistant", kind: "result", content });
     }
     case "error":

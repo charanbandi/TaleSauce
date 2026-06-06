@@ -22,3 +22,6 @@ export async function postDecision(id: string, requestId: string, decision: "all
 export async function updateAgent(id: string, patch: unknown) {
   await fetch(`${base}/agents/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(patch) });
 }
+export async function deleteAgent(id: string) {
+  await fetch(`${base}/agents/${id}`, { method: "DELETE" });
+}

@@ -57,6 +57,11 @@ export class Db {
     return row ? this.rowToAgent(row) : undefined;
   }
 
+  deleteAgent(id: string): void {
+    this.db.prepare("DELETE FROM messages WHERE agent_id=?").run(id);
+    this.db.prepare("DELETE FROM agents WHERE id=?").run(id);
+  }
+
   insertMessage(m: Omit<MessageRow, "id" | "createdAt">): MessageRow {
     const row: MessageRow = { ...m, id: nanoid(), createdAt: Date.now() };
     this.db.prepare(
