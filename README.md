@@ -1,119 +1,132 @@
+<div align="center">
+
 # TaleSauce 🍅
 
-An 8-bit, **Stardew-Valley-inspired simulator for AI agents**. Each agent is a
-pixel-art character that lives in an environment, does ambient "life" actions
-when idle, and real work when you give it a task — walking to its workstation to
-work, to the front of the stage to **report**, or to **ask you a clarifying
-question**. Agents are backed by interchangeable brains: a hosted **OpenClaw**
-endpoint and a local **Claude Code** session bridge (Phase 2).
+### Your AI agents deserve a better home than a chat box.
 
-![TaleSauce](docs/screenshot-placeholder.png)
+**TaleSauce turns AI agents into pixel-art characters that live in a tiny 8-bit world** — they walk to their desks, tend the farm, take coffee breaks, ask you questions, and report back when the work is done. Stardew Valley meets your dev tools.
 
-> Two environments run side-by-side in a draggable split stage — a **farm**
-> (Stardew-style) and an **office**. Drag the divider to rebalance them, click an
-> environment to focus it full-screen, click again to unfocus. The dock below
-> shows what every agent is doing right now.
+![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)
+![React 18](https://img.shields.io/badge/React-18-61dafb?logo=react&logoColor=black)
+![Phaser 3](https://img.shields.io/badge/Phaser-3-8e44ad)
+![Node 20+](https://img.shields.io/badge/Node-20%2B-339933?logo=nodedotjs&logoColor=white)
+![Tests](https://img.shields.io/badge/tests-121%20passing-4a8c2a)
+![Art](https://img.shields.io/badge/pixel%20art-100%25%20hand--coded-e8c87a)
+![License](https://img.shields.io/badge/license-non--commercial-b5895a)
 
-## Stack
+![TaleSauce — a split-screen farm and office full of pixel-art AI agents](media/hero.png)
 
-- **Web:** Vite + React 18 + **Phaser 3** (tilemaps, animated sprites, camera).
-- **Server:** Fastify + WebSocket, the `AgentBrain` orchestration, **SQLite** persistence.
-- **Shared:** a TypeScript types package that is the WS/REST contract.
-- npm-workspaces monorepo, TypeScript throughout, tested with Vitest.
+*A living farm and office, side by side. Every character is a real AI agent. Every pixel is drawn in code.*
 
-## Run locally
+</div>
+
+---
+
+## ✨ The pitch
+
+Most "AI agent" UIs are a text box and a spinner. TaleSauce asks a sillier, better question: **what if you could *watch* your agents work?**
+
+Give an agent a task and it strolls to its workstation and gets busy. Needs a decision from you? It walks to the front of the stage and waves a question. Finished? It reports back, then wanders off to hang out by the pond. Each one is backed by a real, swappable "brain" — a hosted endpoint or a local coding CLI — so the cute little farmer in green is genuinely running Claude Code against your repo.
+
+It's a toy. It's also a server-authoritative, fully-tested, real-time monorepo. Both things are true and that's the fun of it.
+
+## 🎨 Every pixel is hand-coded — zero art packs
+
+No tilesets. No sprite sheets. No asset store. **The entire world is drawn procedurally on a 2D canvas**, frame by frame, then streamed into Phaser as a live texture.
+
+| 🌾 The Farm | 🏢 The Office |
+|:---:|:---:|
+| ![Farm](media/farm.png) | ![Office](media/office.png) |
+| Textured grass, a winding dirt path, a tilled garden with crop rows + scarecrow, a rippling pond, treeline, and chickens that wander and peck. | Nine desks with animated "typing" code monitors, a lounge with a couch + TV, a stocked kitchen, a ping-pong table, and a wall clock. |
+
+Characters are generated too — gender, skin, **9 hairstyles**, shirts, glasses — so no two agents look alike. They blink, bob, walk, and tap away at keyboards. (The renderers are adapted in spirit from the MIT-licensed [My Virtual Office](https://myvirtualoffice.ai) — code only, no images copied.)
+
+## 🧠 One UI, four brains
+
+Each agent is assigned a **brain kind** — and they all walk, talk, and report through the exact same interface:
+
+| Brain | What it is |
+|---|---|
+| 🟣 **OpenClaw** | Hosted, OpenAI-compatible chat endpoint — great for general agent behavior. |
+| 🟠 **Claude Code** | Local Claude Code session pointed at a real repo, with an interactive permission flow for risky tools. |
+| 🔴 **Codex CLI** | OpenAI's `codex` binary as a sandboxed coding assistant. |
+| 🔵 **Cursor CLI** | `cursor-agent` running as just another local coding brain. |
+
+Point a coding agent at a working directory and it'll actually do the work — tool activity surfaces live in its speech bubble as it goes.
+
+## 🪄 The experience
+
+- **Split-stage world** — farm and office run side by side; drag the divider to rebalance, or toggle to focus one full-screen.
+- **Living idle behavior** — idle agents take coffee/water breaks; desk workers type; chickens peck.
+- **Click anyone to chat** — a bottom drawer slides up with the conversation, the agent's environment, and its brain.
+- **Focus-aware everything** — the ambient soundtrack and the agent dock follow whichever side you're looking at.
+- **Real-time and honest** — the server owns the truth; the client just renders the story. Reconnect and the world is exactly where you left it.
+
+## 🏗️ Under the hood
+
+A clean npm-workspaces monorepo, TypeScript end to end:
+
+```
+packages/
+├─ shared/   → the TypeScript contract (WS/REST event union) both sides import
+├─ server/   → Fastify v5 + WebSocket · orchestrator · SQLite · the four brains
+└─ web/      → Vite + React 18 + Phaser 3 · procedural renderers · zustand store
+```
+
+The interesting bits:
+
+- **Server-authoritative state.** Every change is a `ServerEvent` broadcast over WebSocket; the client reduces that stream into the world. No client-side guessing.
+- **Swappable brains behind one interface.** `AgentBrain` normalizes four very different backends (HTTP streaming, local sessions, two CLIs) into the same token / question / result / permission events.
+- **Procedural rendering pipeline.** Each scene draws to an offscreen canvas, uploads it as a Phaser texture, and refreshes ~10fps for animation — responsive and crisp via `Scale.NONE` + a `ResizeObserver`.
+- **Tested.** 121 Vitest unit tests cover the brains, capability detection, orchestrator event mapping, SQLite persistence, and the client reducer.
+
+## 🚀 Run it locally
 
 ```bash
 npm install
-cp .env.example .env          # set OPENCLAW_API_KEY (and URL if different)
-npm run dev                   # server :8787 + web :5173
+cp .env.example .env     # configure at least one brain (see below)
+npm run dev              # server + web, concurrently
 ```
 
-Open http://localhost:5173.
+Open **http://localhost:5173**. With no brain configured, TaleSauce shows friendly onboarding instead of a broken world.
 
-## How it works
+### Configure a brain in `.env`
 
-- **Server-authoritative state.** The orchestrator decides each agent's visible
-  state (`idle`, `working`, `walking-to-front`, `awaiting-user`, `reporting`, …)
-  and streams `ServerEvent`s over WebSocket; the Phaser client just renders them.
-- **Pluggable brains.** Every brain implements one `AgentBrain` interface. The
-  OpenClaw brain calls an OpenAI-compatible streaming `chat/completions` endpoint
-  (key stays server-side) and uses a small system-prompt protocol — the agent
-  emits `❓QUESTION: …` to ask you something and `✅DONE: …` to finish — which the
-  server turns into the walk-to-front / report character actions.
-- **Per-agent config.** Brain, model, and Claude Code session id are
-  configurable per agent; up to 6 agents across the two environments.
-- **CodingAgentBridge seam.** Coding-agent CLIs sit behind a `CodingAgentBridge`
-  interface; Claude Code is wired today (Agent SDK), with Codex/Cursor as future
-  drop-ins.
-
-## Brains & onboarding
-
-The app adapts to whichever brains you configure. No agents are seeded until at
-least one brain is available; if none are configured, the app shows an onboarding
-screen listing the env vars to add.
-
-- **OpenClaw:** set `OPENCLAW_API_URL` + `OPENCLAW_API_KEY` in `.env`.
-- **Claude Code:** set `CLAUDE_CODE_ENABLED=true` (uses your local Claude Code
-  login) or set `ANTHROPIC_API_KEY`. A Claude Code agent needs a **working
-  directory** (the repo it operates on) — set it in the agent's Config panel when
-  adding the agent. Risky tools (Bash/Write/Edit) are gated as in-game
-  **Allow/Deny** asks: the agent walks to the front of the stage and raises a card
-  before executing; read-only tools (Read/Grep/Glob/LS) are auto-approved. You can
-  paste a **session id** to resume an existing conversation, or leave it blank to
-  start a fresh session (the new id is shown once it starts).
-
-### Codex CLI brain (Phase 3)
-
-1. Install: `npm i -g @openai/codex` and run `codex login`
-2. Set `CODEX_ENABLED=true` in `.env`
-3. Restart the server. Add a Codex agent via the **+** button with a `workingDir` pointing to a local repo.
-
-Codex runs **sandboxed** (`workspace-write`): it edits files within the working directory but does not trigger the interactive Allow/Deny permission gate. Tool activity (file edits, shell runs) appears as agent bubbles and dock activity text.
-
-**Live verification** (once installed):
-```bash
-which codex                             # should print a path
-curl localhost:8787/api/capabilities    # should show "codex": true
-```
-
-### Cursor CLI brain (Phase 3)
-
-1. Install `cursor-agent` and run `cursor-agent login`
-2. Set `CURSOR_ENABLED=true` in `.env`
-3. Restart the server. Add a Cursor agent with a `workingDir`.
-
-Same sandboxed behaviour as Codex.
-
-**Live verification** (once installed):
-```bash
-which cursor-agent
-curl localhost:8787/api/capabilities    # should show "cursor": true
-```
-
-Up to 6 agents total; each agent's brain is configured independently.
-
-## Testing
+The server detects capabilities from your environment — set up whichever you have:
 
 ```bash
-npm test        # shared + server + web unit tests (Vitest)
+# OpenClaw (hosted, OpenAI-compatible)
+OPENCLAW_API_URL=...your endpoint...
+OPENCLAW_API_KEY=...your key...
+
+# Claude Code (local session or Anthropic key)
+CLAUDE_CODE_ENABLED=true
+# ANTHROPIC_API_KEY=sk-ant-...
+
+# Codex CLI   (needs: npm i -g @openai/codex && codex login)
+CODEX_ENABLED=true
+
+# Cursor CLI  (needs: cursor-agent installed and logged in)
+CURSOR_ENABLED=true
+
+# Prefer one when several are available
+# DEFAULT_BRAIN=claudecode
 ```
 
-The bug-prone seams are covered test-first: the OpenClaw SSE/protocol parser,
-the agent state machine, the orchestrator's event mapping, the WS event codec,
-the SQLite layer, and the client event reducer.
+### Scripts
 
-## Roadmap
+| Command | Does |
+|---|---|
+| `npm run dev` | Run server + web together |
+| `npm run build` | Build shared → server → web |
+| `npm test` | Run the full Vitest suite |
 
-- **Phase 2 (done):** local **Claude Code** brain via the Claude Agent SDK —
-  per-agent working directory, optional session resume, and **in-game
-  tool-permission asks** (the agent walks to the front with an Allow/Deny card
-  before running Bash/Write/Edit). Capability-driven onboarding and a furnished
-  office.
-- **Phase 3:** Codex CLI + Cursor CLI adapters (drop-ins behind the
-  `CodingAgentBridge` seam), sound, more characters, richer farm.
+## 📜 Credits & license
 
-## Assets
+A **private, non-commercial portfolio project.** The farm, office, and characters are drawn entirely in code — there are no bundled image assets. The only binary assets are audio (Kenney CC0 sound effects and Pixabay ambient loops). Full attribution in **[LICENSES.md](LICENSES.md)**.
 
-Farm + character art by **Cup Nooble (Sprout Lands)**; office tiles by
-**Kenney** (CC0). See [LICENSES.md](LICENSES.md). Non-commercial project.
+<div align="center">
+
+*Made with 🍅 — because AI can be more than a text box.*
+
+</div>
