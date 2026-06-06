@@ -4,7 +4,7 @@
  * Everything is hand-drawn with fillRect so the scene is dense and cohesive (no tilesets).
  */
 
-import { drawCharacter, type CharPalette } from "./characterArt.js";
+import { drawCharacter, makeAppearance, type Appearance } from "./characterArt.js";
 
 let C: CanvasRenderingContext2D;
 
@@ -230,7 +230,7 @@ function zoneLabel(x: number, y: number, text: string, color: string) {
 type NpcState = "toCoffee" | "brew" | "toHome" | "idle";
 interface Npc { x: number; y: number; state: NpcState; timer: number; flip: boolean; }
 let npc: Npc | null = null;
-const NPC_PAL: CharPalette = { shirt: "#5e35b1", skin: "#e8b88a", hair: "#3e2723", pants: "#37474f" };
+const NPC_PAL: Appearance = makeAppearance({ shirt: "#5e35b1", hairStyle: "short" });
 
 function stepAndDrawNpc(W: number, H: number, coffee: { x: number; y: number }, tick: number) {
   const home = { x: W * 0.5, y: H * 0.46 };

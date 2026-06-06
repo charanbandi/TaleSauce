@@ -2,7 +2,7 @@ import Phaser from "phaser";
 import { TILE_SIZE } from "./assets/manifest.js";
 import { nextSpriteIntent, type SpriteIntent } from "./stateMachine.js";
 import type { AgentVisualState } from "@talesauce/shared";
-import { ensureCharTexture, paletteFor, CHAR_FW, CHAR_FH } from "./characterArt.js";
+import { ensureCharTexture, appearanceFor, CHAR_FH } from "./characterArt.js";
 
 export interface AgentSpriteOpts { x: number; y: number; name: string; id?: string; homePx?: { x: number; y: number }; }
 
@@ -26,6 +26,7 @@ export class AgentSprite {
   private tween?: Phaser.Tweens.Tween;
   private home?: { x: number; y: number };
   private walkKey: string;
+  private idleKey: string;
 
   constructor(private scene: Phaser.Scene, opts: AgentSpriteOpts) {
     this.home = opts.homePx;
@@ -33,14 +34,21 @@ export class AgentSprite {
     const py = opts.homePx ? opts.homePx.y : opts.y * TILE_SIZE;
 
     const key = `char-${opts.id ?? opts.name}`;
-    ensureCharTexture(scene, key, paletteFor(opts.name, opts.id ?? opts.name));
+    ensureCharTexture(scene, key, appearanceFor(opts.name, opts.id ?? opts.name));
     this.walkKey = `${key}-walk`;
+    this.idleKey = `${key}-idle`;
     if (!scene.anims.exists(this.walkKey)) {
       scene.anims.create({ key: this.walkKey, frames: [{ key, frame: 1 }, { key, frame: 2 }], frameRate: 6, repeat: -1 });
+    }
+    if (!scene.anims.exists(this.idleKey)) {
+      // mostly still, with an occasional blink (frame 3)
+      const idle = [0, 0, 0, 0, 0, 0, 0, 0, 3].map((frame) => ({ key, frame }));
+      scene.anims.create({ key: this.idleKey, frames: idle, frameRate: 3, repeat: -1 });
     }
 
     this.shadow = scene.add.ellipse(px, py + 1, 14, 5, 0x000000, 0.18);
     this.sprite = scene.add.sprite(px, py, key, 0).setOrigin(0.5, 0.92).setScale(SPRITE_SCALE);
+    this.sprite.play(this.idleKey);
 
     this.label = scene.add.text(px, this.labelY(), opts.name, {
       fontFamily: "monospace", fontSize: "9px", color: "#fff", stroke: "#241a14", strokeThickness: 3,
@@ -76,7 +84,7 @@ export class AgentSprite {
 
   private moveTo(x: number, y: number) {
     const dist = Phaser.Math.Distance.Between(this.sprite.x, this.sprite.y, x, y);
-    if (dist < 2) { this.sprite.anims.stop(); this.sprite.setFrame(0); return; }
+    if (dist < 2) { if (this.sprite.anims.currentAnim?.key !== this.idleKey) this.sprite.play(this.idleKey); return; }
     const duration = Math.min(900, Math.max(180, dist * 5));
     this.sprite.setFlipX(x < this.sprite.x);
     this.sprite.play(this.walkKey, true);
@@ -89,7 +97,7 @@ export class AgentSprite {
         this.bubble.setPosition(this.sprite.x, this.bubbleY());
         this.updateDepths();
       },
-      onComplete: () => { this.sprite.anims.stop(); this.sprite.setFrame(0); },
+      onComplete: () => { this.sprite.play(this.idleKey); },
     });
   }
 
