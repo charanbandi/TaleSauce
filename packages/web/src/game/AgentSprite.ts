@@ -2,65 +2,50 @@ import Phaser from "phaser";
 import { TILE_SIZE } from "./assets/manifest.js";
 import { nextSpriteIntent, type SpriteIntent } from "./stateMachine.js";
 import type { AgentVisualState } from "@talesauce/shared";
+import { ensureCharTexture, paletteFor, CHAR_FW, CHAR_FH } from "./characterArt.js";
 
 export interface AgentSpriteOpts { x: number; y: number; name: string; id?: string; homePx?: { x: number; y: number }; }
 
-const SPRITE_SCALE = 2;
+const SPRITE_SCALE = 1.4;
 
-const NAMED_TINTS: Record<string, number> = {
-  Willow: 0xffffff,
-  Kai:    0x88aaff,
-  Rex:    0xff9966,
-  Cass:   0xcc88ff,
-};
-const PRESET_TINTS = [0x66ffaa, 0xffdd66, 0xff6688, 0x66ccff, 0xaaff88, 0xff88aa];
-
-/** Deterministic tint for an agent by name + id. Exported for testing. */
+/** Back-compat export: a representative tint colour for an agent (used by UI dots). */
+const NAMED: Record<string, number> = { Willow: 0x43a047, Kai: 0x2196f3, Rex: 0xef6c00, Cass: 0x8e24aa };
+const PRESET = [0x26a69a, 0xfbc02d, 0xec407a, 0x5c6bc0, 0x66bb6a, 0xff7043];
 export function tintForAgent(name: string, id: string): number {
-  if (name in NAMED_TINTS) return NAMED_TINTS[name];
-  let h = 0;
-  for (let i = 0; i < id.length; i++) h = (Math.imul(31, h) + id.charCodeAt(i)) | 0;
-  return PRESET_TINTS[Math.abs(h) % PRESET_TINTS.length];
+  if (name in NAMED) return NAMED[name];
+  let h = 0; for (let i = 0; i < id.length; i++) h = (Math.imul(31, h) + id.charCodeAt(i)) | 0;
+  return PRESET[Math.abs(h) % PRESET.length];
 }
 
-/** Renders one agent: shadow + body sprite + name label + emote bubble; reacts to server state. */
+/** Renders one agent: shadow + GBA character + name label + emote bubble; reacts to server state. */
 export class AgentSprite {
   private shadow: Phaser.GameObjects.Ellipse;
   private sprite: Phaser.GameObjects.Sprite;
   private label: Phaser.GameObjects.Text;
   private bubble: Phaser.GameObjects.Text;
   private tween?: Phaser.Tweens.Tween;
-  private currentAnim = "";
   private home?: { x: number; y: number };
+  private walkKey: string;
 
   constructor(private scene: Phaser.Scene, opts: AgentSpriteOpts) {
     this.home = opts.homePx;
     const px = opts.homePx ? opts.homePx.x : opts.x * TILE_SIZE;
     const py = opts.homePx ? opts.homePx.y : opts.y * TILE_SIZE;
 
-    // Shadow ellipse just under the sprite's feet
-    this.shadow = scene.add.ellipse(px, py + 2, 16, 5, 0x000000, 0.18);
+    const key = `char-${opts.id ?? opts.name}`;
+    ensureCharTexture(scene, key, paletteFor(opts.name, opts.id ?? opts.name));
+    this.walkKey = `${key}-walk`;
+    if (!scene.anims.exists(this.walkKey)) {
+      scene.anims.create({ key: this.walkKey, frames: [{ key, frame: 1 }, { key, frame: 2 }], frameRate: 6, repeat: -1 });
+    }
 
-    this.sprite = scene.add.sprite(px, py, "char", 0).setOrigin(0.5, 0.9).setScale(SPRITE_SCALE);
-
-    const tint = tintForAgent(opts.name, opts.id ?? opts.name);
-    if (tint !== 0xffffff) this.sprite.setTint(tint);
+    this.shadow = scene.add.ellipse(px, py + 1, 14, 5, 0x000000, 0.18);
+    this.sprite = scene.add.sprite(px, py, key, 0).setOrigin(0.5, 0.92).setScale(SPRITE_SCALE);
 
     this.label = scene.add.text(px, this.labelY(), opts.name, {
-      fontFamily: "monospace", fontSize: "9px", color: "#fff",
-      stroke: "#241a14", strokeThickness: 3,
+      fontFamily: "monospace", fontSize: "9px", color: "#fff", stroke: "#241a14", strokeThickness: 3,
     }).setOrigin(0.5, 1);
-
     this.bubble = scene.add.text(px, this.bubbleY(), "", { fontSize: "14px" }).setOrigin(0.5, 1);
-
-    if (scene.anims.exists("idle")) {
-      this.sprite.play("idle");
-      // Phase offset — start each agent at a random frame so they don't all bounce in sync
-      const anim = this.sprite.anims.currentAnim;
-      if (anim && anim.frames.length > 1) {
-        this.sprite.anims.setCurrentFrame(anim.frames[Math.floor(Math.random() * anim.frames.length)]);
-      }
-    }
 
     this.updateDepths();
   }
@@ -68,11 +53,6 @@ export class AgentSprite {
   applyState(state: AgentVisualState, frontPoint: { x: number; y: number }, workstation: { x: number; y: number }) {
     const intent: SpriteIntent = nextSpriteIntent(state);
     this.bubble.setText(this.bubbleGlyph(intent.bubble));
-    if (intent.anim && intent.anim !== this.currentAnim && this.scene.anims.exists(intent.anim)) {
-      this.currentAnim = intent.anim;
-      this.sprite.play(intent.anim, true);
-    }
-    // Agents with a home desk sit there when idle/working and only leave to walk to the front.
     const deskOrStation = this.home ?? workstation;
     const wander = this.home
       ? { x: this.home.x + Phaser.Math.Between(-6, 6), y: this.home.y + Phaser.Math.Between(-4, 4) }
@@ -87,27 +67,29 @@ export class AgentSprite {
 
   private updateDepths(): void {
     const d = this.sprite.y;
-    this.shadow.setDepth(d - 2);
-    this.sprite.setDepth(d);
-    this.label.setDepth(d + 2);
-    this.bubble.setDepth(d + 2);
+    this.shadow.setDepth(d - 2); this.sprite.setDepth(d); this.label.setDepth(d + 2); this.bubble.setDepth(d + 2);
   }
 
-  private labelY() { return this.sprite.y - this.sprite.displayHeight * 0.9 - 2; }
-  private bubbleY() { return this.sprite.y - this.sprite.displayHeight * 0.9 - 14; }
+  private spriteH() { return CHAR_FH * SPRITE_SCALE; }
+  private labelY() { return this.sprite.y - this.spriteH() * 0.92 - 2; }
+  private bubbleY() { return this.sprite.y - this.spriteH() * 0.92 - 14; }
 
   private moveTo(x: number, y: number) {
     const dist = Phaser.Math.Distance.Between(this.sprite.x, this.sprite.y, x, y);
-    const duration = Math.min(700, Math.max(150, dist * 4));
+    if (dist < 2) { this.sprite.anims.stop(); this.sprite.setFrame(0); return; }
+    const duration = Math.min(900, Math.max(180, dist * 5));
+    this.sprite.setFlipX(x < this.sprite.x);
+    this.sprite.play(this.walkKey, true);
     this.tween?.stop();
     this.tween = this.scene.tweens.add({
-      targets: this.sprite, x, y, duration, ease: "Quad.InOut",
+      targets: this.sprite, x, y, duration, ease: "Sine.InOut",
       onUpdate: () => {
-        this.shadow.setPosition(this.sprite.x, this.sprite.y + 2);
+        this.shadow.setPosition(this.sprite.x, this.sprite.y + 1);
         this.label.setPosition(this.sprite.x, this.labelY());
         this.bubble.setPosition(this.sprite.x, this.bubbleY());
         this.updateDepths();
       },
+      onComplete: () => { this.sprite.anims.stop(); this.sprite.setFrame(0); },
     });
   }
 

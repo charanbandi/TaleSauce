@@ -6,17 +6,17 @@ vi.mock("phaser", () => ({ default: {} }));
 import { tintForAgent } from "./AgentSprite.js";
 
 describe("tintForAgent", () => {
-  it("returns no tint (0xffffff) for Willow", () => {
-    expect(tintForAgent("Willow", "any-id")).toBe(0xffffff);
+  it("returns green for Willow", () => {
+    expect(tintForAgent("Willow", "any-id")).toBe(0x43a047);
   });
-  it("returns sky blue for Kai", () => {
-    expect(tintForAgent("Kai", "any-id")).toBe(0x88aaff);
+  it("returns blue for Kai", () => {
+    expect(tintForAgent("Kai", "any-id")).toBe(0x2196f3);
   });
   it("returns orange for Rex", () => {
-    expect(tintForAgent("Rex", "any-id")).toBe(0xff9966);
+    expect(tintForAgent("Rex", "any-id")).toBe(0xef6c00);
   });
   it("returns purple for Cass", () => {
-    expect(tintForAgent("Cass", "any-id")).toBe(0xcc88ff);
+    expect(tintForAgent("Cass", "any-id")).toBe(0x8e24aa);
   });
   it("returns a preset tint for unknown names (deterministic by id)", () => {
     const t1 = tintForAgent("Unknown", "abc");
