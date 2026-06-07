@@ -1,6 +1,5 @@
 import Phaser from "phaser";
 import { BaseScene } from "./BaseScene.js";
-import { OFFICE_SPOTS } from "../ActionSystem.js";
 import { TILE_SIZE } from "../assets/manifest.js";
 import { renderOffice, OFFICE_DESKS, OFFICE_COFFEE } from "../officeArt.js";
 
@@ -27,7 +26,7 @@ export class OfficeScene extends BaseScene {
     });
 
     const sfx = this.createSoundSystem("office");
-    this.spawnAgents("office", OFFICE_SPOTS, { x: this.scale.width / 2, y: this.scale.height - TILE_SIZE }, sfx, [...OFFICE_DESKS], { deskWork: true, breakSpot: OFFICE_COFFEE });
+    this.spawnAgents("office", { x: this.scale.width / 2, y: this.scale.height - TILE_SIZE }, sfx, [...OFFICE_DESKS], { deskWork: true, breakSpot: OFFICE_COFFEE });
 
     // Re-lay the office (and re-seat agents) when the pane is resized.
     this.scale.on("resize", () => { this.buildBg(); this.reseatAgents([...OFFICE_DESKS]); });

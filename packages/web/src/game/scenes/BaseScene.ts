@@ -1,8 +1,7 @@
 import Phaser from "phaser";
-import { TILE_SIZE, AUDIO } from "../assets/manifest.js";
+import { AUDIO } from "../assets/manifest.js";
 import { AgentSprite } from "../AgentSprite.js";
 import { useStore } from "../../store/store.js";
-import { workstationFor, type ActionSpot } from "../ActionSystem.js";
 import type { Environment, AgentVisualState } from "@talesauce/shared";
 import { SoundSystem, type SfxKey } from "../SoundSystem.js";
 
@@ -37,14 +36,11 @@ export abstract class BaseScene extends Phaser.Scene {
 
   protected spawnAgents(
     env: Environment,
-    spots: ActionSpot[],
     frontPoint: { x: number; y: number },
     sfx?: SoundSystem,
     seats?: { x: number; y: number }[],
     opts?: { deskWork?: boolean; breakSpot?: { x: number; y: number } },
   ): void {
-    const stationTile = workstationFor(spots).tile;
-    const workstation = { x: stationTile.x * TILE_SIZE, y: stationTile.y * TILE_SIZE };
     const prevStates = new Map<string, AgentVisualState>();
     const SFX_MAP: Partial<Record<AgentVisualState, SfxKey>> = {
       "working":             "task-start",
@@ -83,7 +79,7 @@ export abstract class BaseScene extends Phaser.Scene {
           });
           this.agents.set(rt.config.id, s);
         }
-        s.applyState(rt.state, frontPoint, home ?? workstation);
+        s.applyState(rt.state, frontPoint, home ?? frontPoint);
       }
     };
     render();
