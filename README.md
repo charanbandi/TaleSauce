@@ -26,6 +26,14 @@
 
 Most "AI agent" UIs are a text box and a spinner. TaleSauce asks a sillier, better question: **what if you could *watch* your agents work?**
 
+<div align="center">
+
+![An agent walks to its desk and a speech bubble pops up](media/walk-to-desk.gif)
+
+*Hand Kai a task — he walks to his desk and gets to work.*
+
+</div>
+
 Give an agent a task and it strolls to its workstation and gets busy. Needs a decision from you? It walks to the front of the stage and waves a question. Finished? It reports back, then wanders off to hang out by the pond. Each one is backed by a real, swappable "brain" — a hosted endpoint or a local coding CLI — so the cute little farmer in green is genuinely running Claude Code against your repo.
 
 It's a toy. It's also a server-authoritative, fully-tested, real-time monorepo. Both things are true and that's the fun of it.
