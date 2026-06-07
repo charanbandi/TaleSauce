@@ -16,7 +16,7 @@
 
 ![TaleSauce — a split-screen farm and office full of pixel-art AI agents](media/hero.png)
 
-*A living farm and office, side by side. Every character is a real AI agent. Every pixel is drawn in code.*
+*A living farm and office, side by side. Every character is a real AI agent — they work, chat, and ask you questions. Every pixel is drawn in code.*
 
 </div>
 
@@ -29,6 +29,14 @@ Most "AI agent" UIs are a text box and a spinner. TaleSauce asks a sillier, bett
 Give an agent a task and it strolls to its workstation and gets busy. Needs a decision from you? It walks to the front of the stage and waves a question. Finished? It reports back, then wanders off to hang out by the pond. Each one is backed by a real, swappable "brain" — a hosted endpoint or a local coding CLI — so the cute little farmer in green is genuinely running Claude Code against your repo.
 
 It's a toy. It's also a server-authoritative, fully-tested, real-time monorepo. Both things are true and that's the fun of it.
+
+## 💬 You talk, they work
+
+Click any character to open its chat. Hand it a task, and you watch the whole loop play out — it walks to its desk, does the work, **reports back when it's done**, and **stops to ask you** when there's a real decision to make. The same conversation drives the little pixel human on stage.
+
+![A chat with Kai: a task, a "done" report, and a clarifying question](media/chat.png)
+
+> 🟢 green bubble = *reported back* &nbsp;·&nbsp; 🟠 amber bubble = *needs your call* &nbsp;·&nbsp; the speech bubbles above each character mirror exactly what they're up to.
 
 ## 🎨 Every pixel is hand-coded — zero art packs
 
