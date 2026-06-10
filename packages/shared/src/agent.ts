@@ -35,7 +35,7 @@ export interface AgentConfig {
   brainKind: BrainKind;
   /** OpenClaw model override for tasks; falls back to env default. */
   model?: string;
-  /** Claude Code session id (Phase 2; unused in Phase 1). */
+  /** Claude Code session id (optional; set to resume an existing session). */
   sessionId?: string;
   /** Local repo the agent works in (cwd). Required for brainKind "claudecode", "codex", "cursor". */
   workingDir?: string;

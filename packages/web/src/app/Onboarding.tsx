@@ -29,19 +29,15 @@ function EnvBlock({ children }: { children: string }) {
   );
 }
 
-const ENV_CONTENT = `# Option A — OpenClaw (hosted, OpenAI-compatible)
-OPENCLAW_API_URL=...your endpoint...
+const ENV_CONTENT = `# Option A: OpenClaw (hosted, OpenAI-compatible)
+OPENCLAW_API_URL=https://your-openclaw-host/v1/chat/completions
 OPENCLAW_API_KEY=...your key...
 
-# Option B — Claude Code (local, needs login or API key)
+# Option B: Claude Code (local, needs login or API key)
 CLAUDE_CODE_ENABLED=true
 # ANTHROPIC_API_KEY=sk-ant-...
 
-# Option C — Codex CLI  (needs: npm i -g @openai/codex && codex login)
-CODEX_ENABLED=true
-
-# Option D — Cursor CLI  (needs: cursor-agent installed and logged in)
-CURSOR_ENABLED=true
+# Codex CLI & Cursor CLI: support coming soon
 
 # Optional: which brain to auto-start when more than one is set
 # DEFAULT_BRAIN=claudecode`;
