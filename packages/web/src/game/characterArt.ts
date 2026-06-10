@@ -6,8 +6,8 @@
  */
 import type Phaser from "phaser";
 
-export const CHAR_FW = 30;
-export const CHAR_FH = 50;
+export const CHAR_FW = 36;
+export const CHAR_FH = 52;
 
 export type Gender = "M" | "F";
 export type HairStyle = "bald" | "buzz" | "short" | "medium" | "long" | "bun" | "ponytail" | "spiky" | "curly";
@@ -109,87 +109,126 @@ function drawHair(c: CanvasRenderingContext2D, style: HairStyle, color: string, 
   }
 }
 
-/** Draw one character with feet at (cx, feetY). phase: 0 idle, 1 walk-A, 2 walk-B, 3 blink. */
-export function drawCharacter(c: CanvasRenderingContext2D, cx: number, feetY: number, a: Appearance, phase: number) {
-  c.save(); c.translate(cx, feetY);
-  const walking = phase === 1 || phase === 2;
-  const swing = phase === 1 ? 3 : phase === 2 ? -3 : 0;
+type Expression = "happy" | "focused" | "curious" | "sad" | "blink";
+const OUTLINE = "#2a2018";
+
+function smile(c: CanvasRenderingContext2D, a: Appearance, my: number, expr: Expression) {
+  c.lineWidth = 1;
+  if (expr === "sad") { c.strokeStyle = "#8a4b3a"; c.beginPath(); c.arc(0, my + 3, 3, 1.15 * Math.PI, 1.85 * Math.PI); c.stroke(); return; }
+  if (expr === "curious") { c.fillStyle = "#7a3b2e"; c.beginPath(); c.arc(0, my, 1.6, 0, Math.PI * 2); c.fill(); return; }
+  if (expr === "focused") { fr(c, -2, my, 4, 1, "#8a4b3a"); return; }
+  c.strokeStyle = a.gender === "F" ? "#b15a63" : "#8a4b3a";
+  c.beginPath(); c.arc(0, my - 2, 3, 0.18 * Math.PI, 0.82 * Math.PI); c.stroke();
+}
+
+function drawFace(c: CanvasRenderingContext2D, a: Appearance, expr: Expression, eyeY: number, skin: string) {
+  if (expr === "blink") {
+    fr(c, -6, eyeY + 1, 4, 1, darken(skin, 0.4)); fr(c, 2, eyeY + 1, 4, 1, darken(skin, 0.4));
+    smile(c, a, -5, "happy"); return;
+  }
+  if (expr === "sad") {
+    fr(c, -7, eyeY, 4, 4, "#fff"); fr(c, 3, eyeY, 4, 4, "#fff");
+    fr(c, -6, eyeY + 1, 3, 3, "#263238"); fr(c, 3, eyeY + 1, 3, 3, "#263238");
+    c.fillStyle = "#7ec8e3"; c.beginPath(); c.arc(9, eyeY - 2, 1.5, 0, Math.PI * 2); c.fill();
+  } else if (expr === "curious") {
+    fr(c, -8, eyeY - 2, 5, 5, "#fff"); fr(c, 3, eyeY - 2, 5, 5, "#fff");
+    fr(c, -7, eyeY - 1, 3, 3, "#263238"); fr(c, 4, eyeY - 1, 3, 3, "#263238");
+    fr(c, -7, eyeY - 1, 1, 1, "#fff"); fr(c, 4, eyeY - 1, 1, 1, "#fff");
+  } else if (expr === "focused") {
+    fr(c, -7, eyeY, 4, 3, "#fff"); fr(c, 3, eyeY, 4, 3, "#fff");
+    fr(c, -6, eyeY + 1, 3, 2, "#263238"); fr(c, 4, eyeY + 1, 3, 2, "#263238");
+  } else { // happy
+    fr(c, -7, eyeY - 1, 4, 4, "#fff"); fr(c, 3, eyeY - 1, 4, 4, "#fff");
+    fr(c, -6, eyeY, 3, 3, "#263238"); fr(c, 3, eyeY, 3, 3, "#263238");
+    fr(c, -6, eyeY, 1, 1, "#fff"); fr(c, 3, eyeY, 1, 1, "#fff");
+  }
+  if (expr !== "sad") { c.fillStyle = "rgba(255,120,130,0.42)"; c.fillRect(-9, eyeY + 3, 3, 2); c.fillRect(6, eyeY + 3, 3, 2); }
+  smile(c, a, -5, expr);
+}
+
+// Head drawn with its BOTTOM at local y=0 (extends up to y=-16; hair above that).
+function drawHead(c: CanvasRenderingContext2D, a: Appearance, expr: Expression) {
+  const skin = a.skin;
+  fr(c, -12, -17, 24, 18, OUTLINE);              // outline silhouette
+  fr(c, -11, -16, 22, 16, skin);                 // head
+  fr(c, -11, -2, 22, 2, darken(skin, 0.16));     // chin shade
+  drawHair(c, a.hairStyle, a.hair, -16);
+  const eyeY = -10;
+  drawFace(c, a, expr, eyeY, skin);
+  if (a.glasses && expr !== "blink") {
+    c.strokeStyle = "#263238"; c.lineWidth = 1;
+    c.strokeRect(-7, eyeY - 1, 5, 5); c.strokeRect(2, eyeY - 1, 5, 5); fr(c, -2, eyeY + 1, 4, 1, "#263238");
+  }
+}
+
+// Body drawn with feet at local y=0. Returns neckY (where the head bottom attaches).
+function drawBody(c: CanvasRenderingContext2D, a: Appearance, frame: number): number {
+  const walking = frame === 1 || frame === 2;
+  const typing = frame === 4 || frame === 5;
+  const swing = frame === 1 ? 3 : frame === 2 ? -3 : 0;
   const bob = walking ? 1 : 0;
+  const typeLift = frame === 5 ? 2 : 0;
   const fem = a.gender === "F";
   const bodyW = fem ? 9 : 10;
-  const blink = phase === 3;
+  const legLen = 6, torsoTop = -16 - bob, torsoH = 11, hemY = torsoTop + torsoH;
 
-  // shadow
   c.fillStyle = "rgba(0,0,0,0.18)"; c.beginPath(); c.ellipse(0, 1, 9, 3, 0, 0, Math.PI * 2); c.fill();
 
   if (a.shirtStyle === "dress") {
-    // legs peek below a skirt
-    fr(c, -5, -7 - bob, 4, 7 + swing, a.skin); fr(c, 1, -7 - bob, 4, 7 - swing, a.skin);
-    fr(c, -5, -1 - bob + swing, 4, 2, "#5d4037"); fr(c, 1, -1 - bob - swing, 4, 2, "#5d4037"); // shoes
+    fr(c, -5, -legLen + 1, 4, legLen - 1 + swing, a.skin); fr(c, 1, -legLen + 1, 4, legLen - 1 - swing, a.skin);
+    fr(c, -5, -1 + swing, 4, 2, "#5d4037"); fr(c, 1, -1 - swing, 4, 2, "#5d4037");
   } else {
-    fr(c, -6, -10 - bob, 5, 10 + swing, a.pants); fr(c, 1, -10 - bob, 5, 10 - swing, a.pants);
-    fr(c, -6, -1 - bob + swing, 5, 2, "#263238"); fr(c, 1, -1 - bob - swing, 5, 2, "#263238"); // shoes
+    fr(c, -7, -legLen - 1, 7, legLen + 1, OUTLINE); fr(c, 0, -legLen - 1, 7, legLen + 1, OUTLINE);
+    fr(c, -6, -legLen, 5, legLen + swing, a.pants); fr(c, 1, -legLen, 5, legLen - swing, a.pants);
+    fr(c, -6, -1 + swing, 5, 2, "#263238"); fr(c, 1, -1 - swing, 5, 2, "#263238");
   }
 
-  const typing = phase === 4 || phase === 5;
-  const typeLift = phase === 5 ? 2 : 0;
-
-  // arms (behind body), swing opposite legs — skipped while typing (drawn in front below)
   if (!typing) {
-    fr(c, -bodyW - 3, -22 - bob + swing, 3, 10, a.shirt);
-    fr(c, bodyW, -22 - bob - swing, 3, 10, a.shirt);
+    fr(c, -bodyW - 4, torsoTop - 1, 4, 11, OUTLINE); fr(c, bodyW, torsoTop - 1, 4, 11, OUTLINE);
+    fr(c, -bodyW - 3, torsoTop + swing, 3, 10, a.shirt); fr(c, bodyW, torsoTop - swing, 3, 10, a.shirt);
   }
 
-  // torso / clothing
   if (a.shirtStyle === "dress") {
-    c.fillStyle = a.shirt; c.beginPath();
-    c.moveTo(-bodyW, -22 - bob); c.lineTo(bodyW, -22 - bob); c.lineTo(bodyW + 4, -6 - bob); c.lineTo(-bodyW - 4, -6 - bob); c.closePath(); c.fill();
-    fr(c, -bodyW, -22 - bob, bodyW * 2, 3, lighten(a.shirt, 0.25));
+    c.fillStyle = OUTLINE; c.beginPath(); c.moveTo(-bodyW - 1, torsoTop - 1); c.lineTo(bodyW + 1, torsoTop - 1); c.lineTo(bodyW + 5, hemY + 1); c.lineTo(-bodyW - 5, hemY + 1); c.closePath(); c.fill();
+    c.fillStyle = a.shirt; c.beginPath(); c.moveTo(-bodyW, torsoTop); c.lineTo(bodyW, torsoTop); c.lineTo(bodyW + 4, hemY); c.lineTo(-bodyW - 4, hemY); c.closePath(); c.fill();
+    fr(c, -bodyW, torsoTop, bodyW * 2, 3, lighten(a.shirt, 0.25));
   } else {
-    fr(c, -bodyW, -22 - bob, bodyW * 2, 14, a.shirt);
-    fr(c, -bodyW, -22 - bob, bodyW * 2, 3, lighten(a.shirt, 0.22)); // collar/shoulders
-    fr(c, -bodyW, -10 - bob, bodyW * 2, 2, darken(a.shirt, 0.25));  // hem
-    if (a.shirtStyle === "stripe") { for (let i = 0; i < 3; i++) fr(c, -bodyW, -19 - bob + i * 4, bodyW * 2, 2, lighten(a.shirt, 0.4)); }
+    fr(c, -bodyW - 1, torsoTop - 1, bodyW * 2 + 2, torsoH + 2, OUTLINE);
+    fr(c, -bodyW, torsoTop, bodyW * 2, torsoH, a.shirt);
+    fr(c, -bodyW, torsoTop, bodyW * 2, 3, lighten(a.shirt, 0.22));
+    fr(c, -bodyW, hemY - 2, bodyW * 2, 2, darken(a.shirt, 0.25));
+    if (a.shirtStyle === "stripe") { for (let i = 0; i < 2; i++) fr(c, -bodyW, torsoTop + 3 + i * 4, bodyW * 2, 2, lighten(a.shirt, 0.4)); }
     if (a.shirtStyle === "hoodie") {
-      fr(c, -5, -25 - bob, 10, 4, darken(a.shirt, 0.15));            // hood at neck
-      fr(c, -1, -20 - bob, 2, 8, darken(a.shirt, 0.3));              // zipper
-      fr(c, -6, -14 - bob, 12, 3, darken(a.shirt, 0.18));           // pocket
+      fr(c, -5, torsoTop - 3, 10, 4, darken(a.shirt, 0.15));
+      fr(c, -1, torsoTop + 2, 2, 7, darken(a.shirt, 0.3));
+      fr(c, -6, hemY - 4, 12, 3, darken(a.shirt, 0.18));
     }
   }
-  // hands / forearms
+
   if (typing) {
-    fr(c, -7, -20 - bob, 3, 8, a.shirt); fr(c, 4, -20 - bob, 3, 8, a.shirt);            // forearms forward
-    fr(c, -8, -13 - bob - typeLift, 4, 3, a.skin); fr(c, 4, -13 - bob - typeLift, 4, 3, a.skin); // hands on keyboard
+    fr(c, -7, torsoTop + 2, 3, 8, a.shirt); fr(c, 4, torsoTop + 2, 3, 8, a.shirt);
+    fr(c, -8, hemY - 2 - typeLift, 4, 3, a.skin); fr(c, 4, hemY - 2 - typeLift, 4, 3, a.skin);
   } else {
-    fr(c, -bodyW - 3, -12 - bob + swing, 3, 2, a.skin);
-    fr(c, bodyW, -12 - bob - swing, 3, 2, a.skin);
+    fr(c, -bodyW - 3, torsoTop + 10 + swing, 3, 2, a.skin); fr(c, bodyW, torsoTop + 10 - swing, 3, 2, a.skin);
   }
+  return torsoTop + 1;
+}
 
-  // head + neck shade
-  fr(c, -11, -37 - bob, 22, 16, a.skin);
-  fr(c, -11, -23 - bob, 22, 2, darken(a.skin, 0.18));
-
-  // hair
-  drawHair(c, a.hairStyle, a.hair, -37 - bob);
-
-  // eyes / mouth
-  const eyeY = -31 - bob;
-  if (blink) { fr(c, -6, eyeY + 1, 4, 1, darken(a.skin, 0.4)); fr(c, 2, eyeY + 1, 4, 1, darken(a.skin, 0.4)); }
-  else {
-    fr(c, -6, eyeY, 3, 3, "#ffffff"); fr(c, 3, eyeY, 3, 3, "#ffffff");
-    fr(c, -5, eyeY, 2, 3, "#263238"); fr(c, 4, eyeY, 2, 3, "#263238");
-  }
-  if (a.glasses) {
-    fr(c, -7, eyeY - 1, 6, 5, "rgba(0,0,0,0)"); c.strokeStyle = "#263238"; c.lineWidth = 1;
-    c.strokeRect(-7, eyeY - 1, 5, 5); c.strokeRect(2, eyeY - 1, 5, 5); fr(c, -2, eyeY + 1, 4, 1, "#263238");
-  }
-  fr(c, fem ? -2 : -3, -25 - bob, fem ? 5 : 6, 1, fem ? "#c4626a" : darken(a.skin, 0.3)); // mouth/lips
-
+/** Draw one character with feet at (cx, feetY). frame 0..7 per the table above. */
+export function drawCharacter(c: CanvasRenderingContext2D, cx: number, feetY: number, a: Appearance, frame: number) {
+  c.save(); c.translate(cx, feetY); c.imageSmoothingEnabled = false;
+  const expr: Expression =
+    frame === 4 || frame === 5 ? "focused" :
+    frame === 6 ? "curious" :
+    frame === 7 ? "sad" :
+    frame === 3 ? "blink" : "happy";
+  const neckY = drawBody(c, a, frame);
+  c.save(); c.translate(0, neckY); c.scale(1.3, 1.3); drawHead(c, a, expr); c.restore();
   c.restore();
 }
 
-/** Frames: 0 idle, 1 walk-A, 2 walk-B, 3 blink, 4 type-down, 5 type-up. */
-export const CHAR_FRAMES = 6;
+/** Frames: 0 idle, 1 walk-A, 2 walk-B, 3 blink, 4 type-down, 5 type-up, 6 curious, 7 sad. */
+export const CHAR_FRAMES = 8;
 
 /** Build (once) the spritesheet texture for an agent. */
 export function ensureCharTexture(scene: Phaser.Scene, key: string, a: Appearance): void {

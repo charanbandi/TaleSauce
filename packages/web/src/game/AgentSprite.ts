@@ -34,6 +34,9 @@ export class AgentSprite {
   private walkKey: string;
   private idleKey: string;
   private deskKey: string;
+  private curiousKey: string;
+  private sadKey: string;
+  private currentState: AgentVisualState = "idle";
 
   constructor(private scene: Phaser.Scene, opts: AgentSpriteOpts) {
     this.home = opts.homePx;
@@ -46,10 +49,13 @@ export class AgentSprite {
     this.walkKey = `${key}-walk`; this.idleKey = `${key}-idle`; this.deskKey = `${key}-desk`;
     if (!scene.anims.exists(this.walkKey)) scene.anims.create({ key: this.walkKey, frames: [{ key, frame: 1 }, { key, frame: 2 }], frameRate: 6, repeat: -1 });
     if (!scene.anims.exists(this.idleKey)) scene.anims.create({ key: this.idleKey, frames: [0, 0, 0, 0, 0, 0, 0, 0, 3].map((frame) => ({ key, frame })), frameRate: 3, repeat: -1 });
-    if (!scene.anims.exists(this.deskKey)) scene.anims.create({ key: this.deskKey, frames: [4, 5, 4, 5, 4, 5, 4, 3, 4, 5, 0].map((frame) => ({ key, frame })), frameRate: 6, repeat: -1 });
+    if (!scene.anims.exists(this.deskKey)) scene.anims.create({ key: this.deskKey, frames: [{ key, frame: 4 }, { key, frame: 5 }], frameRate: 5, repeat: -1 });
+    this.curiousKey = `${key}-curious`; this.sadKey = `${key}-sad`;
+    if (!scene.anims.exists(this.curiousKey)) scene.anims.create({ key: this.curiousKey, frames: [{ key, frame: 6 }], frameRate: 1, repeat: -1 });
+    if (!scene.anims.exists(this.sadKey)) scene.anims.create({ key: this.sadKey, frames: [{ key, frame: 7 }], frameRate: 1, repeat: -1 });
 
     this.shadow = scene.add.ellipse(px, py + 1, 14, 5, 0x000000, 0.18);
-    this.sprite = scene.add.sprite(px, py, key, 0).setOrigin(0.5, 0.92).setScale(SPRITE_SCALE);
+    this.sprite = scene.add.sprite(px, py, key, 0).setOrigin(0.5, 0.9).setScale(SPRITE_SCALE);
     this.sprite.play(this.restKey());
 
     this.label = scene.add.text(px, this.labelY(), opts.name, {
@@ -72,6 +78,7 @@ export class AgentSprite {
   }
 
   applyState(state: AgentVisualState, frontPoint: { x: number; y: number }, workstation: { x: number; y: number }) {
+    this.currentState = state;
     const intent: SpriteIntent = nextSpriteIntent(state);
     this.bubble.setText(this.bubbleGlyph(intent.bubble));
     if (this.onErrand) return; // an errand (e.g. coffee break) owns movement until it finishes
@@ -110,7 +117,13 @@ export class AgentSprite {
     if (!this.onErrand) this.walkTo(point.x, point.y);
   }
 
-  private restKey() { return this.deskWork ? this.deskKey : this.idleKey; }
+  private restKey() {
+    const s = this.currentState;
+    if (s === "error") return this.sadKey;
+    if (s === "awaiting-user" || s === "awaiting-permission") return this.curiousKey;
+    if ((s === "working" || s === "going-to-workstation") && this.deskWork) return this.deskKey;
+    return this.idleKey;
+  }
 
   private updateDepths(): void {
     const d = this.sprite.y;
