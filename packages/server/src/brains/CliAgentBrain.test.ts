@@ -32,8 +32,8 @@ describe("CliAgentBrain", () => {
 
   it("forwards events from the underlying bridge", async () => {
     const lines = [
-      JSON.stringify({ type: "text", text: "hi" }),
-      JSON.stringify({ type: "done", result: "Done." }),
+      JSON.stringify({ type: "item.completed", item: { type: "agent_message", text: "hi" } }),
+      JSON.stringify({ type: "turn.completed" }),
     ];
     const events: BrainEvent[] = [];
     const brain = new CliAgentBrain({ kind: "codex", cwd: "/tmp", spawnFn: makeSpawnFn(lines) });
@@ -45,8 +45,8 @@ describe("CliAgentBrain", () => {
 
   it("persists sessionId via onSession callback", async () => {
     const lines = [
-      JSON.stringify({ type: "session", id: "thread_42" }),
-      JSON.stringify({ type: "done" }),
+      JSON.stringify({ type: "thread.started", thread_id: "thread_42" }),
+      JSON.stringify({ type: "turn.completed" }),
     ];
     const onSession = vi.fn();
     const brain = new CliAgentBrain({ kind: "codex", cwd: "/tmp", spawnFn: makeSpawnFn(lines), onSession });
@@ -64,8 +64,8 @@ describe("CliAgentBrain", () => {
 
   it("uses CursorBridge for kind=cursor (session key differs from Codex)", async () => {
     const lines = [
-      JSON.stringify({ type: "session", sessionId: "cursor_abc" }),
-      JSON.stringify({ type: "done" }),
+      JSON.stringify({ type: "system", subtype: "init", session_id: "cursor_abc" }),
+      JSON.stringify({ type: "result", subtype: "success", result: "ok" }),
     ];
     const onSession = vi.fn();
     const brain = new CliAgentBrain({ kind: "cursor", cwd: "/tmp", spawnFn: makeSpawnFn(lines), onSession });
@@ -81,8 +81,11 @@ describe("CliAgentBrain", () => {
     const twoTurnSpawnFn: SpawnFn = (_cmd, args, _opts) => {
       spawnCalls.push(args);
       const lines = callIndex++ === 0
-        ? [JSON.stringify({ type: "session", id: "s99" }), JSON.stringify({ type: "done", result: "t1" })]
-        : [JSON.stringify({ type: "done", result: "t2" })];
+        ? [JSON.stringify({ type: "thread.started", thread_id: "s99" }),
+           JSON.stringify({ type: "item.completed", item: { type: "agent_message", text: "t1" } }),
+           JSON.stringify({ type: "turn.completed" })]
+        : [JSON.stringify({ type: "item.completed", item: { type: "agent_message", text: "t2" } }),
+           JSON.stringify({ type: "turn.completed" })];
       const stdout = new PassThrough();
       const closeListeners: ((code: number | null) => void)[] = [];
       setImmediate(() => { for (const l of lines) stdout.write(l + "\n"); stdout.end(); setTimeout(() => closeListeners.forEach((l) => l(0)), 10); });

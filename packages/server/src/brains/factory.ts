@@ -59,6 +59,7 @@ export function makeBrainFactory(db: Db, env: Env) {
         kind: agent.brainKind,
         cwd: agent.workingDir ?? "",
         sessionId: agent.sessionId,
+        model: agent.model || undefined,
         onSession: (id) => db.updateAgent(agent.id, { sessionId: id }),
       });
     }

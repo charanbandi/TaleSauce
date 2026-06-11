@@ -37,7 +37,11 @@ OPENCLAW_API_KEY=...your key...
 CLAUDE_CODE_ENABLED=true
 # ANTHROPIC_API_KEY=sk-ant-...
 
-# Codex CLI & Cursor CLI: support coming soon
+# Option C: Codex CLI (needs codex on PATH + codex login)
+CODEX_ENABLED=true
+
+# Option D: Cursor CLI (needs cursor-agent on PATH + login)
+CURSOR_ENABLED=true
 
 # Optional: which brain to auto-start when more than one is set
 # DEFAULT_BRAIN=claudecode`;

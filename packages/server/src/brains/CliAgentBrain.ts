@@ -10,6 +10,8 @@ export interface CliAgentBrainOpts {
   kind: CliBridgeKind;
   cwd: string;
   sessionId?: string;
+  /** Optional model override passed to the CLI (`--model`). */
+  model?: string;
   /** Injected for tests; defaults to real child_process.spawn. */
   spawnFn?: SpawnFn;
   onSession?: (id: string) => void;
@@ -28,8 +30,8 @@ export class CliAgentBrain implements AgentBrain {
       opts.onSession?.(id);
     };
     this.bridge = opts.kind === "codex"
-      ? new CodexBridge(opts.spawnFn, onSession)
-      : new CursorBridge(opts.spawnFn, onSession);
+      ? new CodexBridge(opts.spawnFn, onSession, opts.model)
+      : new CursorBridge(opts.spawnFn, onSession, opts.model);
     this.bridge.on((e) => this.emit(e));
   }
 

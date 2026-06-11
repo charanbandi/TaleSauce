@@ -24,6 +24,7 @@ export abstract class StreamJsonCliBridge implements CodingAgentBridge {
   constructor(
     protected spawnFn: SpawnFn = defaultSpawn,
     private onSession: (id: string) => void = () => {},
+    protected model?: string,
   ) {}
 
   /** Binary name, e.g. "codex" or "cursor-agent". */

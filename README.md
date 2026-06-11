@@ -62,9 +62,10 @@ Every agent is backed by a **brain**, and they all walk, talk, and report throug
 |---|---|
 | 🟣 **OpenClaw** | Hosted, OpenAI-compatible chat endpoint, great for general agent behavior. |
 | 🟠 **Claude Code** | A local Claude Code session pointed at a real repo, with an interactive permission flow for risky tools. |
-| ⚪ **Codex CLI · Cursor CLI** | Local coding-agent adapters. *Support coming soon.* |
+| 🔴 **Codex CLI** | OpenAI's `codex` running sandboxed via `codex exec --json`. Set `CODEX_ENABLED=true` with `codex` on your PATH (after `codex login`). |
+| 🔵 **Cursor CLI** | `cursor-agent -p --output-format stream-json`, sandboxed. Set `CURSOR_ENABLED=true` with `cursor-agent` on your PATH. |
 
-Point a coding agent at a working directory and it'll actually do the work, with tool activity surfacing live in its speech bubble as it goes.
+Point a coding agent at a working directory and it'll actually do the work, with tool activity surfacing live in its speech bubble as it goes. The CLI brains run sandboxed with auto-approval, so they stream their work and report back rather than popping an Allow/Deny card.
 
 ## 🪄 The experience
 
@@ -115,11 +116,17 @@ OPENCLAW_API_KEY=your-key
 CLAUDE_CODE_ENABLED=true
 # ANTHROPIC_API_KEY=sk-ant-...
 
-# Codex CLI & Cursor CLI: support coming soon
+# Codex CLI: needs `codex` on PATH (codex login)
+CODEX_ENABLED=true
+
+# Cursor CLI: needs `cursor-agent` on PATH (cursor-agent login)
+CURSOR_ENABLED=true
 
 # Prefer one when several are configured
 # DEFAULT_BRAIN=claudecode
 ```
+
+> Codex and Cursor only show up once their binary resolves on your `PATH` *and* the matching flag is set, so enabling the flag without the CLI installed is a safe no-op.
 
 ### Scripts
 
