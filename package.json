@@ -2,6 +2,7 @@
   "name": "talesauce",
   "private": true,
   "version": "0.1.0",
+  "description": "An 8-bit, Stardew-Valley-style world where AI agents are pixel-art characters that walk to their desks, do real work, and report back. Server-authoritative, fully procedural, TypeScript monorepo.",
   "workspaces": [
     "packages/*"
   ],
@@ -18,7 +19,6 @@
   },
   "devDependencies": {
     "npm-run-all": "^4.1.5",
-    "pngjs": "^7.0.0",
     "typescript": "^5.5.0",
     "vitest": "^2.0.0"
   }
