@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TaleSauce 🍅 · Your AI agents deserve a better home than a chat box</title>
+  <meta name="description" content="TaleSauce turns AI agents into pixel-art characters that live in a tiny 8-bit world. They walk to their desks, tend the farm, ask you questions, and report back. Stardew Valley meets your dev tools." />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="TaleSauce 🍅 · watch your AI agents work" />
+  <meta property="og:description" content="An 8-bit Stardew-style simulator for AI agents. Hand them a task and watch them walk to their desks and get to work." />
+  <meta property="og:image" content="./media/hero.png" />
+  <meta property="og:type" content="website" />
+
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=JetBrains+Mono:wght@400;500;700;800&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+
+<!-- ===================== drifting pixel sky (fixed bg) ===================== -->
+<div class="sky" aria-hidden="true">
+  <span class="cloud cloud--1"></span>
+  <span class="cloud cloud--2"></span>
+  <span class="cloud cloud--3"></span>
+  <span class="cloud cloud--4"></span>
+</div>
+
+<!-- ===================== nav ===================== -->
+<header class="nav">
+  <a class="nav__brand" href="#top">
+    <svg class="tomato" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true">
+      <rect x="6" y="1" width="1" height="2" fill="#4a8c2a"/><rect x="9" y="1" width="1" height="2" fill="#4a8c2a"/>
+      <rect x="7" y="2" width="2" height="1" fill="#6ab04c"/><rect x="5" y="3" width="6" height="1" fill="#4a8c2a"/>
+      <rect x="4" y="4" width="8" height="1" fill="#e0503a"/><rect x="3" y="5" width="10" height="6" fill="#e0503a"/>
+      <rect x="4" y="11" width="8" height="1" fill="#e0503a"/><rect x="5" y="12" width="6" height="1" fill="#c23a2a"/>
+      <rect x="5" y="5" width="2" height="2" fill="#ff7a5c"/><rect x="3" y="9" width="10" height="2" fill="#c23a2a"/>
+    </svg>
+    <span>TaleSauce</span>
+  </a>
+  <nav class="nav__links" aria-label="Primary">
+    <a href="#pitch">The pitch</a>
+    <a href="#cast">Cast</a>
+    <a href="#brains">Brains</a>
+    <a href="#run">Run it</a>
+  </nav>
+  <div class="nav__right">
+    <span class="ws-dot" title="server-authoritative & real-time"></span>
+    <a class="btn btn--ghost" href="https://github.com/charanbandi/TaleSauce" target="_blank" rel="noopener">GitHub ↗</a>
+  </div>
+</header>
+
+<!-- ===================== hero ===================== -->
+<main id="top">
+<section class="hero">
+  <div class="hero__inner">
+    <div class="hero__copy reveal">
+      <span class="kicker">8-bit simulator for AI agents</span>
+      <h1 class="wordmark">TaleSauce<span class="wordmark__tomato">🍅</span></h1>
+      <p class="hero__tag">Your AI agents deserve a better<br/>home than a chat&nbsp;box.</p>
+      <p class="hero__sub">
+        TaleSauce turns AI agents into pixel-art characters that live in a tiny world.
+        They walk to their desks, tend the farm, ask you questions, and report back when
+        the work is done. <strong>Stardew Valley</strong> meets your dev tools.
+      </p>
+      <div class="hero__cta">
+        <a class="btn btn--primary" href="https://github.com/charanbandi/TaleSauce" target="_blank" rel="noopener">View on GitHub</a>
+        <a class="btn btn--ghost" href="#pitch">See it in action ↓</a>
+      </div>
+      <ul class="hero__stats">
+        <li><b>4</b><span>swappable brains</span></li>
+        <li><b>2</b><span>farm + office</span></li>
+        <li><b>100%</b><span>hand-coded art</span></li>
+      </ul>
+    </div>
+
+    <div class="hero__art reveal">
+      <div class="screen">
+        <div class="screen__bar"><i></i><i></i><i></i><span>talesauce · localhost:5173</span></div>
+        <img src="./media/hero.png" alt="A split-screen farm and office full of pixel-art AI agents" loading="eager" />
+      </div>
+      <div class="bubble bubble--float bubble--a">Crops watered 🌾</div>
+      <div class="bubble bubble--float bubble--b">Heads down. Coding 🤓</div>
+    </div>
+  </div>
+  <!-- ambient theme life -->
+  <div class="hero__life" aria-hidden="true">
+    <span class="bird bird--1"></span>
+    <span class="bird bird--2"></span>
+    <span class="spark spark--1"></span>
+    <span class="spark spark--2"></span>
+    <span class="spark spark--3"></span>
+    <span class="spark spark--4"></span>
+    <span class="spark spark--5"></span>
+    <span class="spark spark--6"></span>
+  </div>
+
+  <div class="ground" aria-hidden="true">
+    <span class="tuft tuft--1"></span>
+    <span class="tuft tuft--2"></span>
+    <span class="tuft tuft--3"></span>
+    <span class="tuft tuft--4"></span>
+    <span class="tuft tuft--5"></span>
+    <span class="tuft tuft--6"></span>
+
+    <div class="walker">
+      <span class="walker__shadow"></span>
+      <svg class="walker__body" viewBox="0 0 16 20" shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg">
+        <!-- hand-coded pixel farmer -->
+        <rect x="4" y="2" width="8" height="3" fill="#7a5638"/>
+        <rect x="4" y="4" width="1" height="3" fill="#7a5638"/>
+        <rect x="11" y="4" width="1" height="3" fill="#7a5638"/>
+        <rect x="4" y="5" width="8" height="4" fill="#f0c08a"/>
+        <rect x="6" y="6" width="1" height="2" fill="#2a2018"/>
+        <rect x="9" y="6" width="1" height="2" fill="#2a2018"/>
+        <rect x="4" y="9" width="8" height="5" fill="#4a8c2a"/>
+        <rect x="4" y="12" width="8" height="2" fill="#3a7020"/>
+        <rect x="3" y="9" width="1" height="4" fill="#4a8c2a"/>
+        <rect x="12" y="9" width="1" height="4" fill="#4a8c2a"/>
+        <rect x="3" y="13" width="1" height="1" fill="#f0c08a"/>
+        <rect x="12" y="13" width="1" height="1" fill="#f0c08a"/>
+        <rect x="5" y="14" width="2" height="4" fill="#46506a"/>
+        <rect x="9" y="14" width="2" height="4" fill="#46506a"/>
+        <rect x="5" y="18" width="2" height="1" fill="#3a2e22"/>
+        <rect x="9" y="18" width="2" height="1" fill="#3a2e22"/>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== the pitch ===================== -->
+<section class="band band--cream" id="pitch">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="kicker">The pitch</span>
+      <h2>What if you could <em>watch</em> your agents work?</h2>
+      <p class="lede">
+        Most “AI agent” UIs are a text box and a spinner. TaleSauce asks a sillier, better
+        question. Hand an agent a task and it strolls to its workstation and gets busy.
+        Needs a decision? It walks up and waves a question. Done? It reports back, then
+        wanders off to hang out by the pond.
+      </p>
+    </div>
+
+    <div class="pitch-grid">
+      <figure class="pitch-gif reveal">
+        <div class="screen screen--tight">
+          <div class="screen__bar"><i></i><i></i><i></i><span>kai → desk</span></div>
+          <img src="./media/walk-to-desk.gif" alt="An agent walks to its desk and a speech bubble pops up" loading="lazy" />
+        </div>
+        <figcaption>Hand Kai a task, and he walks to his desk and gets to work.</figcaption>
+      </figure>
+
+      <ol class="loop reveal">
+        <li><span class="loop__n">1</span><div><b>You hand off a task</b><p>Click a character, type what you need in plain English.</p></div></li>
+        <li><span class="loop__n">2</span><div><b>It walks to its desk</b><p>The pixel human heads to its workstation and starts working, for real.</p></div></li>
+        <li><span class="loop__n">3</span><div><b>It stops to ask</b><p>Hit a real decision? It walks up and waves an <span class="tag tag--amber">amber</span> question.</p></div></li>
+        <li><span class="loop__n">4</span><div><b>It reports back</b><p>Finished work earns a <span class="tag tag--green">green</span> report, then a coffee break by the pond.</p></div></li>
+      </ol>
+    </div>
+
+    <p class="aside reveal">
+      It’s a toy. It’s also a server-authoritative, fully-tested, real-time monorepo.
+      Both things are true, and that’s the fun of it.
+    </p>
+  </div>
+</section>
+
+<!-- ===================== you talk, they work ===================== -->
+<section class="band" id="chat">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="kicker">You talk, they work</span>
+      <h2>One conversation drives the whole show</h2>
+      <p class="lede">
+        Click any character to open its chat. Hand it a task and watch the loop play out.
+        The same conversation drives the little pixel human on stage.
+      </p>
+    </div>
+
+    <figure class="chat-shot reveal">
+      <div class="screen">
+        <div class="screen__bar"><i></i><i></i><i></i><span>chat · Kai · Claude Code</span></div>
+        <img src="./media/chat.png" alt="A chat with Kai: a task, a done report, and a clarifying question" loading="lazy" />
+      </div>
+    </figure>
+
+    <div class="legend reveal">
+      <span class="legend__item"><span class="dot dot--green"></span><b>green bubble</b> · reported back</span>
+      <span class="legend__item"><span class="dot dot--amber"></span><b>amber bubble</b> · needs your call</span>
+      <span class="legend__item"><span class="dot dot--blue"></span>speech bubbles mirror exactly what they’re up to</span>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== meet the cast ===================== -->
+<section class="band band--cream" id="cast">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="kicker">Meet the cast</span>
+      <h2>No two agents look alike</h2>
+      <p class="lede">
+        Every appearance is deterministically rolled from genders, <b>9 hairstyles</b>,
+        skin tones, outfits, and glasses. The face <em>emotes</em> with what the agent
+        is doing.
+      </p>
+    </div>
+
+    <figure class="cast-shot reveal">
+      <img src="./media/cast.png" alt="A line-up of five distinct chibi agents, each emoting with a speech bubble" loading="lazy" />
+    </figure>
+
+    <ul class="cast-cards">
+      <li class="cast-card reveal"><b>Willow</b><span>tends the farm</span><i>“Crops watered 🌾”</i></li>
+      <li class="cast-card reveal"><b>Kai</b><span>heads-down coder</span><i>“Heads down. Coding 🤓”</i></li>
+      <li class="cast-card reveal"><b>Cass</b><span>asks the right Q</span><i>“Prod or staging? 👀”</i></li>
+      <li class="cast-card reveal"><b>Rex</b><span>touches grass</span><i>“Touched grass ✅”</i></li>
+      <li class="cast-card reveal"><b>Nova</b><span>unbothered</span><i>“Build broke. I’m fine 😅”</i></li>
+    </ul>
+
+    <p class="aside reveal">
+      And it’s <b>100% hand-coded</b>: no tilesets, no sprite sheets, no asset store. Every
+      character, plus the whole farm and office behind them, is drawn pixel-by-pixel on a
+      2D canvas and streamed into Phaser as a live texture.
+    </p>
+  </div>
+</section>
+
+<!-- ===================== swappable brains ===================== -->
+<section class="band" id="brains">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="kicker">Swappable brains, one UI</span>
+      <h2>The cute farmer in green is genuinely running your agent</h2>
+      <p class="lede">
+        Every agent is backed by a <b>brain</b>, and they all walk, talk, and report
+        through the exact same interface. Point a coding agent at a working directory and
+        it’ll actually do the work.
+      </p>
+    </div>
+
+    <div class="brains-grid">
+      <article class="brain-card brain-card--oc reveal">
+        <header><span class="brain-badge">OC</span><h3>OpenClaw</h3></header>
+        <p>A hosted, OpenAI-compatible chat endpoint. Great for general agent behavior and clarifying questions.</p>
+        <code>OPENCLAW_API_URL · OPENCLAW_API_KEY</code>
+      </article>
+      <article class="brain-card brain-card--cc reveal">
+        <header><span class="brain-badge">CC</span><h3>Claude Code</h3></header>
+        <p>A local Claude Code session pointed at a real repo, with an interactive Allow / Deny flow for risky tools.</p>
+        <code>CLAUDE_CODE_ENABLED=true</code>
+      </article>
+      <article class="brain-card brain-card--cx reveal">
+        <header><span class="brain-badge">CX</span><h3>Codex CLI</h3></header>
+        <p>OpenAI’s <code class="inline">codex</code> running sandboxed via <code class="inline">codex exec --json</code>, auto-approved.</p>
+        <code>CODEX_ENABLED=true</code>
+      </article>
+      <article class="brain-card brain-card--cu reveal">
+        <header><span class="brain-badge">CU</span><h3>Cursor CLI</h3></header>
+        <p><code class="inline">cursor-agent -p --output-format stream-json</code>, sandboxed. Tool activity streams into the bubble live.</p>
+        <code>CURSOR_ENABLED=true</code>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== the experience ===================== -->
+<section class="band band--cream" id="experience">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="kicker">The experience</span>
+      <h2>A whole little world, not a dashboard</h2>
+    </div>
+    <div class="feat-grid">
+      <div class="feat reveal"><span class="feat__ico">🌗</span><b>Split-stage world</b><p>Farm and office run side by side. Drag the divider to rebalance, or toggle to focus one full-screen.</p></div>
+      <div class="feat reveal"><span class="feat__ico">☕</span><b>Living idle behavior</b><p>Idle agents take coffee &amp; water breaks, desk workers type, chickens peck.</p></div>
+      <div class="feat reveal"><span class="feat__ico">💬</span><b>Click anyone to chat</b><p>A bottom drawer slides up with the conversation, the agent’s environment, and its brain.</p></div>
+      <div class="feat reveal"><span class="feat__ico">🎧</span><b>Focus-aware everything</b><p>The ambient soundtrack and the agent dock follow whichever side you’re looking at.</p></div>
+      <div class="feat reveal"><span class="feat__ico">🛰️</span><b>Real-time &amp; honest</b><p>The server owns the truth; the client just renders the story. Reconnect and the world is exactly where you left it.</p></div>
+      <div class="feat reveal"><span class="feat__ico">🎨</span><b>Drawn entirely in code</b><p>Each scene draws to an offscreen canvas, uploads it as a Phaser texture, and refreshes ~10fps for animation.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== under the hood ===================== -->
+<section class="band" id="hood">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="kicker">Under the hood</span>
+      <h2>A toy with a serious spine</h2>
+      <p class="lede">A clean npm-workspaces monorepo, TypeScript end to end.</p>
+    </div>
+
+    <div class="hood-grid">
+      <pre class="tree reveal"><code><span class="c-dir">packages/</span>
+├─ <span class="c-dir">shared/</span>   <span class="c-cm"># the TS contract both sides import</span>
+├─ <span class="c-dir">server/</span>   <span class="c-cm"># Fastify v5 + WebSocket · orchestrator</span>
+│            <span class="c-cm"># SQLite · swappable brains</span>
+└─ <span class="c-dir">web/</span>      <span class="c-cm"># Vite + React 18 + Phaser 3</span>
+             <span class="c-cm"># procedural renderers · zustand</span></code></pre>
+
+      <div class="flow reveal">
+        <div class="flow__node">Brain<small>HTTP / CLI / Claude Code</small></div>
+        <div class="flow__arrow">→ <em>ServerEvent</em></div>
+        <div class="flow__node">Server<small>authoritative state</small></div>
+        <div class="flow__arrow">→ <em>WebSocket</em></div>
+        <div class="flow__node">Client<small>renders the story</small></div>
+      </div>
+    </div>
+
+    <ul class="hood-points reveal">
+      <li><b>Server-authoritative state.</b> Every change is a <code class="inline">ServerEvent</code> broadcast over WebSocket; the client reduces that stream into the world. No client-side guessing.</li>
+      <li><b>Swappable brains behind one interface.</b> <code class="inline">AgentBrain</code> normalizes very different backends into the same token / question / result / permission events.</li>
+      <li><b>Procedural rendering pipeline.</b> Each scene draws to an offscreen canvas, uploads it as a Phaser texture, and refreshes for animation. No tilesets, no sprite sheets.</li>
+    </ul>
+
+    <div class="badges reveal">
+      <span class="pix-badge">TypeScript · strict</span>
+      <span class="pix-badge">React 18</span>
+      <span class="pix-badge">Phaser 3</span>
+      <span class="pix-badge">Fastify v5</span>
+      <span class="pix-badge">SQLite</span>
+      <span class="pix-badge">WebSocket</span>
+      <span class="pix-badge pix-badge--gold">100% hand-coded ✓</span>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== run it ===================== -->
+<section class="band band--cream" id="run">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="kicker">Run it locally</span>
+      <h2>Three commands to a living world</h2>
+      <p class="lede">With no brain configured, TaleSauce shows friendly onboarding instead of a broken world.</p>
+    </div>
+
+    <div class="run-grid">
+      <div class="code-card reveal">
+        <div class="code-card__head"><span>get started</span><button class="copy" type="button" data-copy="npm install&#10;cp .env.example .env&#10;npm run dev">copy</button></div>
+        <pre><code><span class="c-cm"># 1. install &amp; configure one brain</span>
+npm install
+cp .env.example .env
+
+<span class="c-cm"># 2. server + web, concurrently</span>
+npm run dev
+
+<span class="c-cm"># 3. open the world</span>
+<span class="c-str">http://localhost:5173</span></code></pre>
+      </div>
+
+      <div class="code-card reveal">
+        <div class="code-card__head"><span>.env · pick a brain</span><button class="copy" type="button" data-copy="OPENCLAW_API_URL=https://your-host/v1/chat/completions&#10;OPENCLAW_API_KEY=your-key&#10;CLAUDE_CODE_ENABLED=true&#10;CODEX_ENABLED=true&#10;CURSOR_ENABLED=true">copy</button></div>
+        <pre><code><span class="c-cm"># OpenClaw: OpenAI-compatible endpoint</span>
+OPENCLAW_API_URL=<span class="c-str">https://your-host/...</span>
+OPENCLAW_API_KEY=<span class="c-str">your-key</span>
+
+<span class="c-cm"># Claude Code: local session or API key</span>
+CLAUDE_CODE_ENABLED=<span class="c-kw">true</span>
+
+<span class="c-cm"># Codex / Cursor: need the CLI on PATH</span>
+CODEX_ENABLED=<span class="c-kw">true</span>
+CURSOR_ENABLED=<span class="c-kw">true</span></code></pre>
+      </div>
+    </div>
+
+    <p class="aside reveal">
+      Codex and Cursor only appear once their binary resolves on your <code class="inline">PATH</code>
+      <em>and</em> the matching flag is set, so enabling a flag without the CLI installed is a safe no-op.
+    </p>
+  </div>
+</section>
+</main>
+
+<!-- ===================== footer ===================== -->
+<footer class="foot">
+  <div class="wrap foot__inner">
+    <div class="foot__brand">
+      <svg class="tomato" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true">
+        <rect x="6" y="1" width="1" height="2" fill="#4a8c2a"/><rect x="9" y="1" width="1" height="2" fill="#4a8c2a"/>
+        <rect x="7" y="2" width="2" height="1" fill="#6ab04c"/><rect x="5" y="3" width="6" height="1" fill="#4a8c2a"/>
+        <rect x="4" y="4" width="8" height="1" fill="#e0503a"/><rect x="3" y="5" width="10" height="6" fill="#e0503a"/>
+        <rect x="4" y="11" width="8" height="1" fill="#e0503a"/><rect x="5" y="12" width="6" height="1" fill="#c23a2a"/>
+        <rect x="5" y="5" width="2" height="2" fill="#ff7a5c"/><rect x="3" y="9" width="10" height="2" fill="#c23a2a"/>
+      </svg>
+      <b>TaleSauce</b>
+    </div>
+    <p class="foot__note">
+      A private, non-commercial portfolio project. The farm, office, and characters are drawn
+      entirely in code, with no bundled image assets. Pixel art is <b>100% hand-coded</b>.
+    </p>
+    <div class="foot__links">
+      <a href="https://github.com/charanbandi/TaleSauce" target="_blank" rel="noopener">GitHub ↗</a>
+      <a href="https://github.com/charanbandi/TaleSauce/blob/main/LICENSES.md" target="_blank" rel="noopener">Licenses ↗</a>
+      <a href="#top">Back to top ↑</a>
+    </div>
+    <span class="pix-badge pix-badge--gold">made pixel-by-pixel 🍅</span>
+  </div>
+</footer>
+
+<script src="./main.js"></script>
+</body>
+</html>

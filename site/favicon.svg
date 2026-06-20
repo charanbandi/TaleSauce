@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" shape-rendering="crispEdges">
+  <!-- hand-coded pixel tomato -->
+  <rect x="6" y="1" width="1" height="2" fill="#4a8c2a"/>
+  <rect x="9" y="1" width="1" height="2" fill="#4a8c2a"/>
+  <rect x="7" y="2" width="2" height="1" fill="#6ab04c"/>
+  <rect x="5" y="3" width="6" height="1" fill="#4a8c2a"/>
+  <rect x="4" y="4" width="8" height="1" fill="#e0503a"/>
+  <rect x="3" y="5" width="10" height="6" fill="#e0503a"/>
+  <rect x="4" y="11" width="8" height="1" fill="#e0503a"/>
+  <rect x="5" y="12" width="6" height="1" fill="#c23a2a"/>
+  <rect x="3" y="5" width="10" height="2" fill="#e0503a"/>
+  <rect x="5" y="5" width="2" height="2" fill="#ff7a5c"/>
+  <rect x="3" y="9" width="10" height="2" fill="#c23a2a"/>
+</svg>
